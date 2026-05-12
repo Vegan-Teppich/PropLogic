@@ -64,6 +64,7 @@ public class TruthTable {
             for (x = 0; x < parenthesesProps.size(); x++) {
                 String parenthesisProp = parenthesesProps.get(x);
 
+                System.out.println(parenthesisProp);
 
                 boolean propNegation = false;
                 TableMode atomic1TableMode = null;
@@ -80,6 +81,7 @@ public class TruthTable {
                     propNegation = true;
 
                 // parenthesesProps (parenthesesProps) code sehr ähnlich deswegen bitte verbessern
+                // wenn vergleichbare parenthesesProps vorhanden sind
                 if (x>0){
                     for (int i = x - 1; i >= 0; i--) {
                         String previousParenthesisProp = propTable.get(0).get(i).getPropString();
@@ -91,26 +93,49 @@ public class TruthTable {
                                 atomic1TableMode = TableMode.PARENTHESES;
                                 atomic1TableIndex = i;
                             }
+
                         } else if (atomic2ParenthesisPropIndices[0] == -1) {
+
 
                             // 2te atomicProp
                             atomic2ParenthesisPropIndices[0] = parenthesisProp.lastIndexOf(previousParenthesisProp);
                             atomic2ParenthesisPropIndices[1] = atomic2ParenthesisPropIndices[0] + previousParenthesisProp.length();
 
-                            int[][] atomicIndices = handleAtomicIndices(atomic1ParenthesisPropIndices, atomic2ParenthesisPropIndices);
-                            atomic1ParenthesisPropIndices = atomicIndices[0];
-                            atomic2ParenthesisPropIndices = atomicIndices[1];
-
                             if (atomic2ParenthesisPropIndices[0] != -1) {
                                 atomic2TableMode = TableMode.PARENTHESES;
                                 atomic2TableIndex = i;
-                                break;
                             }
 
+                            SecondAtomicPositionValidity atomic2IndexValid = isAtomic2Valid(atomic1ParenthesisPropIndices, atomic2ParenthesisPropIndices);
+
+                            if (atomic2IndexValid == SecondAtomicPositionValidity.INVALID) {
+                                atomic1ParenthesisPropIndices[0] = -1;
+                                atomic2ParenthesisPropIndices[1] = -1;
+
+                            } else if (atomic2IndexValid == SecondAtomicPositionValidity.FLIP_VALID) {
+                                int[] flipAtomicIndex = atomic1ParenthesisPropIndices;
+                                atomic1ParenthesisPropIndices = atomic2ParenthesisPropIndices;
+                                atomic2ParenthesisPropIndices = flipAtomicIndex;
+
+
+                                TableMode flipAtomicTableMode = atomic1TableMode;
+                                atomic1TableMode = atomic2TableMode;
+                                atomic2TableMode = flipAtomicTableMode;
+
+                                int flipAtomicTableIndex = atomic1TableIndex;
+                                atomic1TableIndex = atomic2TableIndex;
+                                atomic2TableIndex = flipAtomicTableIndex;
+
+
+                            } else if (atomic2IndexValid == SecondAtomicPositionValidity.VALID) {
+
+                            }
+                            break;
 
                         }
                     }
                 }
+
 
 
                 // parenthesesProps (atomicProps) code sehr ähnlich deswegen bitte verbessern
@@ -125,37 +150,50 @@ public class TruthTable {
                                 atomic1TableMode = TableMode.ATOMIC;
                                 atomic1TableIndex = i;
                             }
-
                             continue;
                         }
                         atomic2ParenthesisPropIndices[0] = parenthesisProp.lastIndexOf(atomicPropTable[i][0].getPropString());
                         atomic2ParenthesisPropIndices[1] = atomic2ParenthesisPropIndices[0] + atomicPropTable[i][0].getPropString().length();
 
-                        int[][] atomicIndices = handleAtomicIndices(atomic1ParenthesisPropIndices, atomic2ParenthesisPropIndices);
-                        atomic1ParenthesisPropIndices = atomicIndices[0];
-                        atomic2ParenthesisPropIndices = atomicIndices[1];
-
                         if (atomic2ParenthesisPropIndices[0] != -1) {
                             atomic2TableMode = TableMode.ATOMIC;
                             atomic2TableIndex = i;
-                            break;
                         }
+
+                        SecondAtomicPositionValidity atomic2IndexValid = isAtomic2Valid(atomic1ParenthesisPropIndices, atomic2ParenthesisPropIndices);
+                        if (atomic2IndexValid == SecondAtomicPositionValidity.INVALID) {
+                            atomic1ParenthesisPropIndices[0] = -1;
+                            atomic2ParenthesisPropIndices[1] = -1;
+                        } else if (atomic2IndexValid == SecondAtomicPositionValidity.FLIP_VALID) {
+                            int[] flipAtomicIndex = atomic1ParenthesisPropIndices;
+                            atomic1ParenthesisPropIndices = atomic2ParenthesisPropIndices;
+                            atomic2ParenthesisPropIndices = flipAtomicIndex;
+
+
+                            TableMode flipAtomicTableMode = atomic1TableMode;
+                            atomic1TableMode = atomic2TableMode;
+                            atomic2TableMode = flipAtomicTableMode;
+
+                            int flipAtomicTableIndex = atomic1TableIndex;
+                            atomic1TableIndex = atomic2TableIndex;
+                            atomic2TableIndex = flipAtomicTableIndex;
+
+
+                        } else if (atomic2IndexValid == SecondAtomicPositionValidity.VALID) {
+
+                        }
+                        break;
 
                     }
                 }
-
-                /*
-                System.out.println(parenthesesProps + "\n");
-                System.out.println(atomic1TableMode);
-                System.out.println(atomic1ParenthesisPropIndices[0]);
-                System.out.println(atomic1ParenthesisPropIndices[1]);
-                */
 
                 atomic1String = parenthesisProp.substring(atomic1ParenthesisPropIndices[0], atomic1ParenthesisPropIndices[1]);
                 atomic2String = parenthesisProp.substring(atomic2ParenthesisPropIndices[0], atomic2ParenthesisPropIndices[1]);
 
                 if (atomic1ParenthesisPropIndices[0] != -1 && atomic2ParenthesisPropIndices[0] != -1) {
                     Operator op = null;
+                    System.out.println(atomic1ParenthesisPropIndices[1]);
+                    System.out.println(atomic2ParenthesisPropIndices[0]);
                     String opSubstring = parenthesisProp.substring(atomic1ParenthesisPropIndices[1], atomic2ParenthesisPropIndices[0]);
                     for (Operator thisOp : Operator.getBinary()){
                         if (opSubstring.contains(thisOp.getSyntax() + "")){
@@ -180,32 +218,6 @@ public class TruthTable {
 
     }
 
-    private int[][] handleAtomicIndices(int[] atomic1ParenthesisPropIndices, int[] atomic2ParenthesisPropIndices) {
-        SecondAtomicPositionValidity atomic2IndexValid = isAtomic2Valid(atomic1ParenthesisPropIndices, atomic2ParenthesisPropIndices);
-        if (atomic2IndexValid == SecondAtomicPositionValidity.INVALID) {
-            atomic2ParenthesisPropIndices[0] = -1;
-            atomic2ParenthesisPropIndices[1] = -1;
-        } else if (atomic2IndexValid == SecondAtomicPositionValidity.FLIP_VALID) {
-            int[] flipAtomicIndex = atomic1ParenthesisPropIndices;
-            atomic1ParenthesisPropIndices = atomic2ParenthesisPropIndices;
-            atomic2ParenthesisPropIndices = flipAtomicIndex;
-
-            /*
-            TableMode flipTableMode = atomic1TableMode;
-            atomic1TableMode = atomic2TableMode;
-            atomic2TableMode = flipTableMode;
-
-            int flipAtomicTableIndex = atomic1TableIndex;
-            atomic1TableIndex = atomic2TableIndex;
-            atomic2TableIndex = flipAtomicTableIndex;
-            */
-
-        } else if (atomic2IndexValid == SecondAtomicPositionValidity.VALID) {
-
-        }
-
-        return new int[][]{atomic1ParenthesisPropIndices, atomic2ParenthesisPropIndices};
-    }
 
     private SecondAtomicPositionValidity isAtomic2Valid(int[] atomic1IndexInParenthesisProp, int[] atomic2IndexInParenthesisProp) {
         if (atomic1IndexInParenthesisProp[1] <= atomic2IndexInParenthesisProp[0]) {
@@ -270,6 +282,15 @@ public class TruthTable {
             newAtomic1String = atomic1.getPropString();
             newAtomic2String = atomic2.getPropString();
 
+/*
+            System.out.println("atomic1");
+            System.out.println(atomic1String);
+            System.out.println(newAtomic1String);
+            System.out.println();
+            System.out.println("atomic2");
+            System.out.println(atomic2String);
+            System.out.println(newAtomic2String);
+*/
             if (atomic1String.equals(newAtomic1String) && atomic2String.equals(newAtomic2String)){
                 CompoundProposition cpProp = new CompoundProposition(atomic1, op, atomic2, mode);
                 if (propNegation)
