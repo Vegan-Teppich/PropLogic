@@ -1,4 +1,3 @@
-
 package argument;
 
 import compoundProposition.CompoundProposition;
@@ -89,6 +88,12 @@ public class TruthTable {
                             atomic1ParenthesisPropIndices[0] = parenthesisProp.indexOf(previousParenthesisProp);
                             atomic1ParenthesisPropIndices[1] = atomic1ParenthesisPropIndices[0] + previousParenthesisProp.length();
 
+                            /*
+                            System.out.println(previousParenthesisProp);
+                            System.out.println(props[p].getParenthesesProps().get(i));
+                            System.out.println(atomic1ParenthesisPropIndices[0]);
+                            */
+
                             if (atomic1ParenthesisPropIndices[0] != -1) {
                                 atomic1TableMode = TableMode.PARENTHESES;
                                 atomic1TableIndex = i;
@@ -96,10 +101,17 @@ public class TruthTable {
 
                         } else if (atomic2ParenthesisPropIndices[0] == -1) {
 
+                            int testIndex1 = parenthesisProp.lastIndexOf(previousParenthesisProp);
+                            int testIndex2 = testIndex1 + previousParenthesisProp.length();
+
+                            if ((testIndex1 > atomic1ParenthesisPropIndices[0] && testIndex1 < atomic1ParenthesisPropIndices[1]) || (testIndex2 > atomic1ParenthesisPropIndices[0] && testIndex2 < atomic1ParenthesisPropIndices[1]))
+                                continue;
 
                             // 2te atomicProp
-                            atomic2ParenthesisPropIndices[0] = parenthesisProp.lastIndexOf(previousParenthesisProp);
-                            atomic2ParenthesisPropIndices[1] = atomic2ParenthesisPropIndices[0] + previousParenthesisProp.length();
+                            atomic2ParenthesisPropIndices[0] = testIndex1;
+                            atomic2ParenthesisPropIndices[1] = testIndex2;
+
+
 
                             if (atomic2ParenthesisPropIndices[0] != -1) {
                                 atomic2TableMode = TableMode.PARENTHESES;
@@ -152,8 +164,15 @@ public class TruthTable {
                             }
                             continue;
                         }
-                        atomic2ParenthesisPropIndices[0] = parenthesisProp.lastIndexOf(atomicPropTable[i][0].getPropString());
-                        atomic2ParenthesisPropIndices[1] = atomic2ParenthesisPropIndices[0] + atomicPropTable[i][0].getPropString().length();
+
+                        int testIndex1 = parenthesisProp.lastIndexOf(atomicPropTable[i][0].getPropString());
+                        int testIndex2 = testIndex1 + atomicPropTable[i][0].getPropString().length();
+
+                        if ((testIndex1 > atomic1ParenthesisPropIndices[0] && testIndex1 < atomic1ParenthesisPropIndices[1]) || (testIndex2 > atomic1ParenthesisPropIndices[0] && testIndex2 < atomic1ParenthesisPropIndices[1]))
+                            continue;
+
+                        atomic2ParenthesisPropIndices[0] = testIndex1;
+                        atomic2ParenthesisPropIndices[1] = testIndex2;
 
                         if (atomic2ParenthesisPropIndices[0] != -1) {
                             atomic2TableMode = TableMode.ATOMIC;
@@ -187,13 +206,19 @@ public class TruthTable {
                     }
                 }
 
+                System.out.println("parenthesisProp: " + parenthesisProp);
+                System.out.println("atomic1:");
+                System.out.println(atomic1ParenthesisPropIndices[0]);
+                System.out.println(atomic1ParenthesisPropIndices[1]);
+                System.out.println("atomic2");
+                System.out.println(atomic2ParenthesisPropIndices[0]);
+                System.out.println(atomic2ParenthesisPropIndices[1]);
+
                 atomic1String = parenthesisProp.substring(atomic1ParenthesisPropIndices[0], atomic1ParenthesisPropIndices[1]);
                 atomic2String = parenthesisProp.substring(atomic2ParenthesisPropIndices[0], atomic2ParenthesisPropIndices[1]);
 
                 if (atomic1ParenthesisPropIndices[0] != -1 && atomic2ParenthesisPropIndices[0] != -1) {
                     Operator op = null;
-                    System.out.println(atomic1ParenthesisPropIndices[1]);
-                    System.out.println(atomic2ParenthesisPropIndices[0]);
                     String opSubstring = parenthesisProp.substring(atomic1ParenthesisPropIndices[1], atomic2ParenthesisPropIndices[0]);
                     for (Operator thisOp : Operator.getBinary()){
                         if (opSubstring.contains(thisOp.getSyntax() + "")){
@@ -291,6 +316,7 @@ public class TruthTable {
             System.out.println(atomic2String);
             System.out.println(newAtomic2String);
 */
+
             if (atomic1String.equals(newAtomic1String) && atomic2String.equals(newAtomic2String)){
                 CompoundProposition cpProp = new CompoundProposition(atomic1, op, atomic2, mode);
                 if (propNegation)
