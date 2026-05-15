@@ -46,7 +46,7 @@ public class Argument {
             if (prop.getParenthesesCount()[0] != prop.getParenthesesCount()[1])
                 return false;
 
-            if (!checkIfParenthesesPropsAreWellFormedFormula(prop.getSubProps()))
+            if (!checkIfSubPropsAreWellFormedFormula(prop.getSubProps()))
                 return false;
 
         }
@@ -60,11 +60,11 @@ public class Argument {
         }
     }
 
-    private boolean checkIfParenthesesPropsAreWellFormedFormula(List<SubProposition> parenthesesProps) {
+    private boolean checkIfSubPropsAreWellFormedFormula(List<SubProposition> subProps) {
 
-        for (int p = 0; p < parenthesesProps.size(); p++){
+        for (int p = 0; p < subProps.size(); p++){
 
-            String propString = parenthesesProps.get(p).getPropString();
+            String propString = subProps.get(p).getPropString();
             //System.out.println(propString);
             String lastCompound1 = "";
             String lastCompound2 = "";
@@ -85,9 +85,9 @@ public class Argument {
             }
 
             if (p >= 1){
-                lastCompound1 = parenthesesProps.get(p-1).getPropString();
+                lastCompound1 = subProps.get(p-1).getPropString();
                 if (p >= 2){
-                    lastCompound2 = parenthesesProps.get(p-2).getPropString();
+                    lastCompound2 = subProps.get(p-2).getPropString();
                 }
             }
 

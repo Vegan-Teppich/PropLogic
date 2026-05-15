@@ -21,8 +21,8 @@ public class Proposition extends AtomicProposition {
         //if (propString.isEmpty())
         //    return;
         this.propString = cleanPropString();
-        this.parenthesesCount = countParenthesis();
-        this.subProps = extractParenthesesProps();
+        this.parenthesesCount = countParentheses();
+        this.subProps = extractSubProps();
     }
 
 
@@ -49,7 +49,7 @@ public class Proposition extends AtomicProposition {
         return propString;
     }
 
-    public int[] countParenthesis() {
+    public int[] countParentheses() {
         int openingParenthesesNumber = 0;
         int closingParenthesesNumber = 0;
 
@@ -63,7 +63,7 @@ public class Proposition extends AtomicProposition {
         return new int[]{openingParenthesesNumber, closingParenthesesNumber};
     }
 
-    public ArrayList<SubProposition> extractParenthesesProps() {
+    public ArrayList<SubProposition> extractSubProps() {
         ArrayList<SubProposition> output = new ArrayList<>();
 
         int openingParenthesisIndex = -1;
