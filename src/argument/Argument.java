@@ -3,7 +3,6 @@ package argument;
 import compoundProposition.AtomicProposition;
 import compoundProposition.Operator;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -47,7 +46,7 @@ public class Argument {
             if (prop.getParenthesesCount()[0] != prop.getParenthesesCount()[1])
                 return false;
 
-            if (!checkIfParenthesesPropsAreWellFormedFormula(prop.getParenthesesProps()))
+            if (!checkIfParenthesesPropsAreWellFormedFormula(prop.getSubProps()))
                 return false;
 
         }
@@ -61,11 +60,11 @@ public class Argument {
         }
     }
 
-    private boolean checkIfParenthesesPropsAreWellFormedFormula(List<String> parenthesesProps) {
+    private boolean checkIfParenthesesPropsAreWellFormedFormula(List<SubProposition> parenthesesProps) {
 
         for (int p = 0; p < parenthesesProps.size(); p++){
 
-            String propString = parenthesesProps.get(p);
+            String propString = parenthesesProps.get(p).getPropString();
             //System.out.println(propString);
             String lastCompound1 = "";
             String lastCompound2 = "";
@@ -86,9 +85,9 @@ public class Argument {
             }
 
             if (p >= 1){
-                lastCompound1 = parenthesesProps.get(p-1);
+                lastCompound1 = parenthesesProps.get(p-1).getPropString();
                 if (p >= 2){
-                    lastCompound2 = parenthesesProps.get(p-2);
+                    lastCompound2 = parenthesesProps.get(p-2).getPropString();
                 }
             }
 
@@ -174,24 +173,25 @@ public class Argument {
 
         for (Proposition prop : props){
 
-            for (String propString : prop.getParenthesesProps()) {
-                int index = 0;
+            for (SubProposition subProp : prop.getSubProps()) {
+                String subPropString = subProp.getPropString();
 
-                while (index < propString.length()) {
+                int index = 0;
+                while (index < subPropString.length()) {
                     String currentProp = "";
 
-                    while (index < propString.length()) {
+                    while (index < subPropString.length()) {
                         boolean operatorFoundAtIndex = false;
 
                         for (Operator op : Operator.values()) {
-                            if (propString.charAt(index) == op.getSyntax()) {
+                            if (subPropString.charAt(index) == op.getSyntax()) {
                                 operatorFoundAtIndex = true;
                                 break;
                             }
                         }
 
                         if (!operatorFoundAtIndex) {
-                            currentProp += propString.charAt(index);
+                            currentProp += subPropString.charAt(index);
                         } else {
                             index++;
                             break;

@@ -8,8 +8,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class Proposition extends AtomicProposition {
-
-    private List<String> parenthesesProps;
+    private List<SubProposition> subProps;
     private int[] parenthesesCount;
 
     //private int[] index = new int[2];
@@ -17,16 +16,13 @@ public class Proposition extends AtomicProposition {
         super(propString, mode);
         init();
     }
-    public Proposition(AtomicProposition atomicProp){
-        this(atomicProp.getPropString(), atomicProp.getMode());
-    }
 
     private void init(){
         //if (propString.isEmpty())
         //    return;
         this.propString = cleanPropString();
         this.parenthesesCount = countParenthesis();
-        this.parenthesesProps = extractParenthesesProps();
+        this.subProps = extractParenthesesProps();
     }
 
 
@@ -67,8 +63,8 @@ public class Proposition extends AtomicProposition {
         return new int[]{openingParenthesesNumber, closingParenthesesNumber};
     }
 
-    public ArrayList<String> extractParenthesesProps() {
-        ArrayList<String> output = new ArrayList<>();
+    public ArrayList<SubProposition> extractParenthesesProps() {
+        ArrayList<SubProposition> output = new ArrayList<>();
 
         int openingParenthesisIndex = -1;
         int closingParenthesisIndex = -1;
@@ -111,8 +107,9 @@ public class Proposition extends AtomicProposition {
                 }
                 break;
             }
+            String parentheticalPropString = propString.substring(openingParenthesisIndex, closingParenthesisIndex + 1);
             //if (negationExists)
-            output.add(propString.substring(openingParenthesisIndex, closingParenthesisIndex + 1));
+            output.add(new SubProposition(parentheticalPropString, mode, negationExists));
         }
         return output;
     }
@@ -161,8 +158,8 @@ public class Proposition extends AtomicProposition {
         return parenthesesCount;
     }
 
-    public List<String> getParenthesesProps() {
-        return parenthesesProps;
+    public List<SubProposition> getSubProps() {
+        return subProps;
     }
 
     /*
