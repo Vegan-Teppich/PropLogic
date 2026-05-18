@@ -221,6 +221,10 @@ public class TruthTable {
 
                 if (atomic1SubPropIndices[0] != -1 && atomic1SubPropIndices[1] != -1){
 
+                    if (subPropString.length() > 0)
+                        if (subPropString.charAt(0) == Operator.NEGATION.getSyntax())
+                            subProp.setNegation(true);
+
                     if (atomic1SubPropIndices[0] > 0)
                         if (subPropString.charAt(atomic1SubPropIndices[0]-1) == Operator.NEGATION.getSyntax())
                             atomic1Negation = true;
@@ -252,6 +256,8 @@ public class TruthTable {
                     }else {
                         fillInColumn(subProp, atomic1, atomic1TableMode, atomic1TableIndex);
                     }
+                }else{
+                    throw new IllegalStateException("CHECK WHY THERE WAS NO FIRST ATOMIC_PROP FOUND IN SUB_PROP");
                 }
 
 
@@ -320,21 +326,18 @@ public class TruthTable {
             } else if (atomic2TableMode == TableMode.SUB) {
                 atomic2FromTableIndex = propTable.get(y).get(atomic2TableXIndex);
             }
-            newAtomic1String = atomic1.getPropString();
-            newAtomic2String = atomic2.getPropString();
+            newAtomic1String = atomic1FromTableIndex.getPropString();
+            newAtomic2String = atomic2FromTableIndex.getPropString();
 
-/*
-            System.out.println("atomic1");
-            System.out.println(atomic1String);
-            System.out.println(newAtomic1String);
-            System.out.println();
-            System.out.println("atomic2");
-            System.out.println(atomic2String);
-            System.out.println(newAtomic2String);
-*/
+            boolean atomic1Truth = atomic1FromTableIndex.isTruth();
+            boolean atomic2Truth = atomic2FromTableIndex.isTruth();
+            if (atomic1.isNegation())
+                atomic1Truth = !atomic1Truth;
+            if (atomic2.isNegation())
+                atomic2Truth = !atomic2Truth;
 
             if (atomic1.getPropString().equals(newAtomic1String) && atomic2.getPropString().equals(newAtomic2String)) {
-                boolean cpTruth = CompoundProposition.getCompoundTruthValue(atomic1FromTableIndex.isTruth(), op, atomic2FromTableIndex.isTruth());
+                boolean cpTruth = CompoundProposition.getCompoundTruthValue(atomic1Truth, op, atomic2Truth);
                 if (subProp.isNegation()){
                     cpTruth = !cpTruth;
                 }
@@ -367,10 +370,16 @@ public class TruthTable {
             }
 
             newAtomic1String = atomic1FromTableIndex.getPropString();
+            boolean atomic1Truth = atomic1FromTableIndex.isTruth();
+            if (atomic1.isNegation())
+                atomic1Truth = !atomic1Truth;
 
             if (atomic1.getPropString().equals(newAtomic1String)) {
-                if (subProp.isNegation())
-                    atomic1.setTruth(!atomic1.isTruth());
+                if (subProp.isNegation()){
+                    subProp.setTruth(!atomic1Truth);
+                }else {
+                    subProp.setTruth(atomic1Truth);
+                }
                 propTable.get(y).add(subProp);
             } else {
                 throw new IllegalStateException("CRITICAL ERROR! ATOMIC_PROP DOES NOT MATCH. THE CURRENT PROP MUST BE DERIVED FROM TABLES PREVIOUS PROPS.");
