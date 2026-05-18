@@ -221,7 +221,7 @@ public class TruthTable {
 
                 if (atomic1SubPropIndices[0] != -1 && atomic1SubPropIndices[1] != -1){
 
-                    if (subPropString.length() > 0)
+                    if (subPropString.length() > 1)
                         if (subPropString.charAt(0) == Operator.NEGATION.getSyntax())
                             subProp.setNegation(true);
 
