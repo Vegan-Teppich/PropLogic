@@ -5,150 +5,67 @@ import compoundProposition.Operator;
 import compoundProposition.AtomicProposition;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 public class TruthTable {
 
+    Argument arg;
     AtomicProposition[][] atomicPropTable;
     List<List<SubProposition>> propTable = new ArrayList<>();
     int rowCount;
 
     public TruthTable(Argument arg) {
-
-        fillInTable(arg);
+        this.arg = arg;
+        fillInTable();
     }
 
-    private void fillInTable(Argument arg) {
+    private void fillInTable() {
 
         Proposition[] props = arg.getProps();
 
-
         Set<AtomicProposition> atomicProps = arg.getAtomicProps();
 
+        calculateRowsAndDefineSpaceInTables(atomicProps.size());
 
-        rowCount = 1;
-        for (int x = 0; x < atomicProps.size(); x++) {
-            rowCount = rowCount * 2;
-        }
-        atomicPropTable = new AtomicProposition[atomicProps.size()][rowCount];
+        atomicTableTruthAssignmentEnumeration(atomicProps);
 
-        for (int y = 0; y < rowCount; y++) {
-            propTable.add(new ArrayList<>());
-        }
-
-        // atomicProps
-        int adjacentTruthRows = rowCount;
-        int x = -1;
-        for (AtomicProposition atomicProp : atomicProps) {
-            x++;
-            adjacentTruthRows = adjacentTruthRows / 2;
-            boolean truth = false;
-            int y = -1;
-            for (int y1 = 0; y1 < rowCount / adjacentTruthRows; y1++) {
-                truth = !truth;
-                for (int y2 = 0; y2 < adjacentTruthRows; y2++) {
-                    y++;
-                    atomicPropTable[x][y] = new AtomicProposition(atomicProp.getPropString(), atomicProp.getMode(), truth);
-                }
-            }
-        }
 
 
         // subProps
         for (int p = 0; p < props.length; p++) {
 
-            List<SubProposition> subProps = props[p].getSubProps();
-            AtomicProposition.Mode mode = props[p].getMode();
-            for (x = 0; x < subProps.size(); x++) {
+            Proposition prop = props[p];
+            List<SubProposition> subProps = prop.getSubProps();
+            AtomicProposition.Mode mode = prop.getMode();
+
+            for (int x = 0; x < subProps.size(); x++) {
                 SubProposition subProp = subProps.get(x);
-
                 String subPropString = subProp.getPropString();
-                boolean subNegation = false;
 
-                System.out.println(subPropString);
 
-                boolean atomic1Negation = false;
+
                 TableMode atomic1TableMode = null;
                 int atomic1TableIndex = -1;
                 int[] atomic1SubPropIndices = {-1, -1};
-                String atomic1String;
 
-                boolean atomic2Negation = false;
+                String atomic1String;
+                boolean atomic1Negation = false;
+
+
                 TableMode atomic2TableMode = null;
                 int atomic2TableIndex = -1;
                 int[] atomic2SubPropIndices = {-1, -1};
-                String atomic2String;
 
-                if (subPropString.charAt(0) == Operator.NEGATION.getSyntax())
-                    subNegation = true;
+                String atomic2String;
+                boolean atomic2Negation = false;
+
 
                 // subProps (subProps) code sehr ähnlich deswegen bitte verbessern
                 // wenn vergleichbare subProps vorhanden sind
-                if (x > 0) {
-                    for (int i = x - 1; i >= 0; i--) {
-                        String previousSubProp = propTable.get(0).get(i).getPropString();
-                        if (atomic1SubPropIndices[0] == -1 || atomic1SubPropIndices[1] == -1) {
-                            atomic1SubPropIndices[0] = subPropString.indexOf(previousSubProp);
-                            atomic1SubPropIndices[1] = atomic1SubPropIndices[0] + previousSubProp.length();
+                evaluateSubPropsBottomUp(subPropString);
 
-                            if (atomic1SubPropIndices[0] != -1) {
-                                atomic1TableMode = TableMode.SUB;
-                                atomic1TableIndex = i;
-                            }
-                            continue;
-                        }
-
-                        /*
-                        int testIndex1 = subPropString.lastIndexOf(previousSubProp);
-                        int testIndex2 = testIndex1 + previousSubProp.length();
-
-                        if ((testIndex1 > atomic1SubPropIndices[0] && testIndex1 < atomic1SubPropIndices[1]) || (testIndex2 > atomic1SubPropIndices[0] && testIndex2 < atomic1SubPropIndices[1]))
-                            continue;
-
-                        atomic2SubPropIndices[0] = testIndex1;
-                        atomic2SubPropIndices[1] = testIndex2;
-                        */
-
-                        // 2te atomicProp
-                        atomic2SubPropIndices[0] = subPropString.lastIndexOf(previousSubProp);
-                        atomic2SubPropIndices[1] = atomic2SubPropIndices[0] + previousSubProp.length();
-
-                        if (atomic2SubPropIndices[0] != -1) {
-                            atomic2TableMode = TableMode.SUB;
-                            atomic2TableIndex = i;
-                        }
-
-                        SecondAtomicPositionValidity atomic2IndexValid = isAtomic2Valid(atomic1SubPropIndices, atomic2SubPropIndices);
-
-                        if (atomic2IndexValid == SecondAtomicPositionValidity.INVALID) {
-                            atomic2SubPropIndices[0] = -1;
-                            atomic2SubPropIndices[1] = -1;
-                        } else if (atomic2IndexValid == SecondAtomicPositionValidity.FLIP_VALID) {
-                            int[] flipAtomicIndex = atomic1SubPropIndices;
-                            atomic1SubPropIndices = atomic2SubPropIndices;
-                            atomic2SubPropIndices = flipAtomicIndex;
-
-
-                            TableMode flipAtomicTableMode = atomic1TableMode;
-                            atomic1TableMode = atomic2TableMode;
-                            atomic2TableMode = flipAtomicTableMode;
-
-                            int flipAtomicTableIndex = atomic1TableIndex;
-                            atomic1TableIndex = atomic2TableIndex;
-                            atomic2TableIndex = flipAtomicTableIndex;
-
-                            break;
-                        } else if (atomic2IndexValid == SecondAtomicPositionValidity.VALID) {
-                            break;
-                        }
-
-
-
-                    }
-
-
-                }
 
 
                 // subProps (atomicProps) code sehr ähnlich deswegen bitte verbessern
@@ -212,16 +129,17 @@ public class TruthTable {
                     }
                 }
 
-                System.out.println("atomic1:");
-                System.out.println(atomic1SubPropIndices[0]);
-                System.out.println(atomic1SubPropIndices[1]);
-                System.out.println("atomic2");
-                System.out.println(atomic2SubPropIndices[0]);
-                System.out.println(atomic2SubPropIndices[1]);
+
+
+
+
+
+
+
+
 
                 if (atomic1SubPropIndices[0] != -1 && atomic1SubPropIndices[1] != -1){
 
-                    if (subPropString.length() > 1)
                         if (subPropString.charAt(0) == Operator.NEGATION.getSyntax())
                             subProp.setNegation(true);
 
@@ -262,6 +180,103 @@ public class TruthTable {
 
 
             }
+        }
+    }
+
+    private void evaluateSubPropsBottomUp(String subPropString, PreviousSubPropIndices previousAtomic) {
+        if (propTable.get(0).size() > 0) {
+            for (int i = propTable.get(0).size() - 1; i >= 0; i--) {
+                String previousSubProp = propTable.get(0).get(i).getPropString();
+                if (atomic1SubPropIndices[0] == -1 || atomic1SubPropIndices[1] == -1) {
+                    atomic1SubPropIndices[0] = subPropString.indexOf(previousSubProp);
+                    atomic1SubPropIndices[1] = atomic1SubPropIndices[0] + previousSubProp.length();
+
+                    if (atomic1SubPropIndices[0] != -1) {
+                        atomic1TableMode = TableMode.SUB;
+                        atomic1TableIndex = i;
+                    }
+                    continue;
+                }
+
+                        /*
+                        int testIndex1 = subPropString.lastIndexOf(previousSubProp);
+                        int testIndex2 = testIndex1 + previousSubProp.length();
+
+                        if ((testIndex1 > atomic1SubPropIndices[0] && testIndex1 < atomic1SubPropIndices[1]) || (testIndex2 > atomic1SubPropIndices[0] && testIndex2 < atomic1SubPropIndices[1]))
+                            continue;
+
+                        atomic2SubPropIndices[0] = testIndex1;
+                        atomic2SubPropIndices[1] = testIndex2;
+                        */
+
+                // 2te atomicProp
+                atomic2SubPropIndices[0] = subPropString.lastIndexOf(previousSubProp);
+                atomic2SubPropIndices[1] = atomic2SubPropIndices[0] + previousSubProp.length();
+
+                if (atomic2SubPropIndices[0] != -1) {
+                    atomic2TableMode = TableMode.SUB;
+                    atomic2TableIndex = i;
+                }
+
+                SecondAtomicPositionValidity atomic2IndexValid = isAtomic2Valid(atomic1SubPropIndices, atomic2SubPropIndices);
+
+                if (atomic2IndexValid == SecondAtomicPositionValidity.INVALID) {
+                    atomic2SubPropIndices[0] = -1;
+                    atomic2SubPropIndices[1] = -1;
+                } else if (atomic2IndexValid == SecondAtomicPositionValidity.FLIP_VALID) {
+                    int[] flipAtomicIndex = atomic1SubPropIndices;
+                    atomic1SubPropIndices = atomic2SubPropIndices;
+                    atomic2SubPropIndices = flipAtomicIndex;
+
+
+                    TableMode flipAtomicTableMode = atomic1TableMode;
+                    atomic1TableMode = atomic2TableMode;
+                    atomic2TableMode = flipAtomicTableMode;
+
+                    int flipAtomicTableIndex = atomic1TableIndex;
+                    atomic1TableIndex = atomic2TableIndex;
+                    atomic2TableIndex = flipAtomicTableIndex;
+
+                    break;
+                } else if (atomic2IndexValid == SecondAtomicPositionValidity.VALID) {
+                    break;
+                }
+
+
+
+            }
+
+
+        }
+    }
+
+    private void atomicTableTruthAssignmentEnumeration(Collection<AtomicProposition> atomicProps) {
+        int adjacentTruthRows = rowCount;
+        int x = -1;
+        for (AtomicProposition atomicProp : atomicProps) {
+            x++;
+            adjacentTruthRows = adjacentTruthRows / 2;
+            boolean truth = false;
+            int y = -1;
+            for (int y1 = 0; y1 < rowCount / adjacentTruthRows; y1++) {
+                truth = !truth;
+                for (int y2 = 0; y2 < adjacentTruthRows; y2++) {
+                    y++;
+                    atomicPropTable[x][y] = new AtomicProposition(atomicProp.getPropString(), atomicProp.getMode(), truth);
+                }
+            }
+        }
+    }
+
+    private void calculateRowsAndDefineSpaceInTables(int atomicPropCount){
+        rowCount = 1;
+        for (int x = 0; x < atomicPropCount; x++) {
+            rowCount = rowCount * 2;
+        }
+        atomicPropTable = new AtomicProposition[atomicPropCount][rowCount];
+
+        for (int y = 0; y < rowCount; y++) {
+            propTable.add(new ArrayList<>());
         }
     }
 
