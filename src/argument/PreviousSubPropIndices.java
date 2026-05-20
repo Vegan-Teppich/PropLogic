@@ -1,40 +1,45 @@
 package argument;
 
 public class PreviousSubPropIndices {
-    String currentSubPropString;
+    protected String currentSubPropString;
 
 
-    int atomicBeginIndex = -1;
-    int atomicLength;
+    protected int atomicBeginIndex = -1;
+    protected int atomicLength;
 
-    int tableIndex = -1;
-    TruthTable.TableMode tableMode;
+    protected int tableXIndex = -1;
+    protected TruthTable.TableMode tableMode;
 
+
+    public PreviousSubPropIndices(){
+
+    }
 
     public PreviousSubPropIndices(String currentSubPropString, int atomicBeginIndex, int atomicLength, int tableIndex, TruthTable.TableMode tableMode){
         this.currentSubPropString = currentSubPropString;
         this.atomicBeginIndex = atomicBeginIndex;
         this.atomicLength = atomicLength;
-        this.tableIndex = tableIndex;
+        this.tableXIndex = tableIndex;
         this.tableMode = tableMode;
     }
 
     public String getCurrentSubPropString() {
         return currentSubPropString;
     }
+    public void setCurrentSubPropString(String currentSubPropString) {
+        this.currentSubPropString = currentSubPropString;
+    }
 
     public int getAtomicBeginIndex() {
         return atomicBeginIndex;
+    }
+    public void setAtomicBeginIndex(int atomicBeginIndex) {
+        this.atomicBeginIndex = atomicBeginIndex;
     }
 
     public int getAtomicEndIndex(){
         return atomicBeginIndex + atomicLength;
     }
-
-    public void setAtomicBeginIndex(int atomicBeginIndex) {
-        this.atomicBeginIndex = atomicBeginIndex;
-    }
-
     public void setAtomicEndIndex(int atomicEndIndex){
         atomicLength = atomicEndIndex - atomicBeginIndex;
     }
@@ -42,23 +47,20 @@ public class PreviousSubPropIndices {
     public int getAtomicLength() {
         return atomicLength;
     }
-
     public void setAtomicLength(int atomicLength) {
         this.atomicLength = atomicLength;
     }
 
-    public int getTableIndex() {
-        return tableIndex;
+    public int getTableXIndex() {
+        return tableXIndex;
     }
-
-    public void setTableIndex(int tableIndex) {
-        this.tableIndex = tableIndex;
+    public void setTableXIndex(int tableXIndex) {
+        this.tableXIndex = tableXIndex;
     }
 
     public TruthTable.TableMode getTableMode() {
         return tableMode;
     }
-
     public void setTableMode(TruthTable.TableMode tableMode) {
         this.tableMode = tableMode;
     }
@@ -69,7 +71,7 @@ public class PreviousSubPropIndices {
                 currentSubPropString.isEmpty() ||
                 atomicBeginIndex < 0 ||
                 atomicLength < 1 ||
-                tableIndex < 0 ||
+                tableXIndex < 0 ||
                 tableMode == null;
     }
 }
