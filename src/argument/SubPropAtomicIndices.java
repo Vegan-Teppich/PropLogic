@@ -1,6 +1,6 @@
 package argument;
 
-public class PreviousSubPropIndices {
+public class SubPropAtomicIndices {
     protected String currentSubPropString;
 
 
@@ -11,11 +11,11 @@ public class PreviousSubPropIndices {
     protected TruthTable.TableMode tableMode;
 
 
-    public PreviousSubPropIndices(){
+    public SubPropAtomicIndices(){
 
     }
 
-    public PreviousSubPropIndices(String currentSubPropString, int atomicBeginIndex, int atomicLength, int tableIndex, TruthTable.TableMode tableMode){
+    public SubPropAtomicIndices(String currentSubPropString, int atomicBeginIndex, int atomicLength, int tableIndex, TruthTable.TableMode tableMode){
         this.currentSubPropString = currentSubPropString;
         this.atomicBeginIndex = atomicBeginIndex;
         this.atomicLength = atomicLength;
@@ -65,7 +65,15 @@ public class PreviousSubPropIndices {
         this.tableMode = tableMode;
     }
 
-    public boolean checkIfEmpty(){
+    public void setEmpty(){
+        currentSubPropString = null;
+        atomicBeginIndex = -1;
+        atomicLength = 0;
+        tableXIndex = -1;
+        tableMode = null;
+    }
+
+    public boolean isEmpty(){
         return
                 currentSubPropString == null ||
                 currentSubPropString.isEmpty() ||
