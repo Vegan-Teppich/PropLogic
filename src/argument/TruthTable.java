@@ -124,75 +124,73 @@ public class TruthTable {
         if (previousAtomics.length != 2)
             throw new IllegalStateException("CRITICAL ERROR: EXACTLY TWO ATOMIC PLACEHOLDERS MUST BE PASSED.");
 
+        String subPropString = previousAtomics[0].getCurrentSubPropString();
+
         for (TableMode tm : TableMode.values()) {
 
-            if (tm == TableMode.SUB)
-                if (propTable.get(0).size() <= 0) {
+            if (tm == TableMode.SUB){
+                if (propTable.get(0).size() <= 1) {
                     continue;
                 }
+            }
 
-            String subPropString = previousAtomics[0].getCurrentSubPropString();
+            if (previousAtomics[1].getAtomicBeginIndex() > -1 && previousAtomics[0].getAtomicBeginIndex() > -1)
+                continue;
 
-            for (int x = propTable.get(0).size() - 1; x >= 0; x--) {
-                String previousSubProp = propTable.get(0).get(x).getPropString();
-                // previousAtomics.length ist immer 2
-                for (int a = 0; a < previousAtomics.length; a++) {
-                    if (previousAtomics[a].getAtomicBeginIndex() <= -1) {
-                        if (a == 0) {
-                            previousAtomics[a].setAtomicBeginIndex(subPropString.indexOf(previousSubProp));
-                        } else if (a == 1) {
-                            previousAtomics[a].setAtomicBeginIndex(subPropString.lastIndexOf(previousSubProp));
-                        }
-
-                        if (previousAtomics[a].getAtomicBeginIndex() > -1) {
-                            previousAtomics[a].setAtomicLength(previousSubProp.length());
-                            previousAtomics[a].setTableMode(TableMode.SUB);
-                            previousAtomics[a].setTableXIndex(x);
-
-                            if (a == 1)
-                                convAtomicsRightPos(previousAtomics);
-                        } else {
-                            break;
-                        }
+            if (tm == TableMode.SUB){
+                for (int x = propTable.get(0).size() - 1; x >= 0; x--) {
+                    searchAndSaveAtomicData(subPropString, previousAtomics, tm, x);
+                    if (previousAtomics[0].getAtomicBeginIndex() > -1 && previousAtomics[1].getAtomicBeginIndex() > -1) {
+                        break;
                     }
                 }
-                if (previousAtomics[0].getAtomicBeginIndex() > -1 && previousAtomics[1].getAtomicBeginIndex() > -1) {
+            } else if (tm == TableMode.ATOMIC) {
+                for (int x = 0; x < atomicPropTable.length; x++) {
+                    searchAndSaveAtomicData(subPropString, previousAtomics, tm, x);
+                    if (previousAtomics[0].getAtomicBeginIndex() > -1 && previousAtomics[1].getAtomicBeginIndex() > -1) {
+                        break;
+                    }
+                }
+            }
+
+
+        }
+
+
+
+
+    }
+
+    private void searchAndSaveAtomicData(String subPropString, SubPropAtomicIndices[] previousAtomics, TableMode mode, int tableXIndex) {
+        String previousSubProp = null;
+        if (mode == TableMode.SUB){
+            previousSubProp = propTable.get(0).get(tableXIndex).getPropString();
+        } else if (mode == TableMode.ATOMIC) {
+            previousSubProp = atomicPropTable[tableXIndex][0].getPropString();
+        }
+        // previousAtomics.length ist immer 2
+        for (int a = 0; a < previousAtomics.length; a++) {
+            if (previousAtomics[a].getAtomicBeginIndex() <= -1) {
+                if (a == 0) {
+                    previousAtomics[a].setAtomicBeginIndex(subPropString.indexOf(previousSubProp));
+                } else if (a == 1) {
+                    previousAtomics[a].setAtomicBeginIndex(subPropString.lastIndexOf(previousSubProp));
+                }
+
+                if (previousAtomics[a].getAtomicBeginIndex() > -1) {
+                    previousAtomics[a].setAtomicLength(previousSubProp.length());
+                    previousAtomics[a].setTableMode(TableMode.SUB);
+                    previousAtomics[a].setTableXIndex(tableXIndex);
+
+                    if (a == 1)
+                        convAtomicsRightPos(previousAtomics);
+                } else {
                     break;
                 }
-
-            }
-
-        }
-
-
-        if (previousAtomics[1].getAtomicBeginIndex() <= -1) {
-            for (int i = 0; i < atomicPropTable.length; i++) {
-                if (previousAtomics[0].getAtomicBeginIndex() <= -1) {
-
-                    previousAtomics[0].setAtomicBeginIndex(subPropString.indexOf(atomicPropTable[i][0].getPropString()));
-
-                    // kann man auch am ende checken
-                    if (previousAtomics[0].getAtomicBeginIndex() > -1) {
-                        previousAtomics[0].setAtomicLength(atomicPropTable[i][0].getPropString().length());
-                        ;
-                        previousAtomics[0].setTableMode(TableMode.ATOMIC);
-                        previousAtomics[0].setTableXIndex(i);
-                    }
-                    continue;
-                }
-
-                previousAtomics[1].setAtomicBeginIndex(subPropString.lastIndexOf(atomicPropTable[i][0].getPropString()));
-
-                if (previousAtomics[1].getAtomicBeginIndex() > -1) {
-                    previousAtomics[1].setAtomicLength(atomicPropTable[i][0].getPropString().length());
-                    previousAtomics[1].setTableMode(TableMode.ATOMIC);
-                    previousAtomics[1].setTableXIndex(i);
-
-                    convAtomicsRightPos(previousAtomics);
-                }
-
             }
         }
+
+
     }
 
     private void convAtomicsRightPos(SubPropAtomicIndices[] previousAtomics) {
