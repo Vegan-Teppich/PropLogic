@@ -1,7 +1,8 @@
 package argument;
 
+
 public class SubPropAtomicIndices {
-    protected String currentSubPropString;
+    protected String superSubPropString;
 
 
     protected int atomicBeginIndex = -1;
@@ -15,19 +16,19 @@ public class SubPropAtomicIndices {
 
     }
 
-    public SubPropAtomicIndices(String currentSubPropString, int atomicBeginIndex, int atomicLength, int tableIndex, TruthTable.TableMode tableMode){
-        this.currentSubPropString = currentSubPropString;
+    public SubPropAtomicIndices(String superSubPropString, int atomicBeginIndex, int atomicLength, int tableIndex, TruthTable.TableMode tableMode){
+        this.superSubPropString = superSubPropString;
         this.atomicBeginIndex = atomicBeginIndex;
         this.atomicLength = atomicLength;
         this.tableXIndex = tableIndex;
         this.tableMode = tableMode;
     }
 
-    public String getCurrentSubPropString() {
-        return currentSubPropString;
+    public String getSuperSubPropString() {
+        return superSubPropString;
     }
-    public void setCurrentSubPropString(String currentSubPropString) {
-        this.currentSubPropString = currentSubPropString;
+    public void setSuperSubPropString(String superSubPropString) {
+        this.superSubPropString = superSubPropString;
     }
 
     public int getAtomicBeginIndex() {
@@ -66,7 +67,7 @@ public class SubPropAtomicIndices {
     }
 
     public void setEmpty(){
-        currentSubPropString = null;
+        superSubPropString = null;
         atomicBeginIndex = -1;
         atomicLength = 0;
         tableXIndex = -1;
@@ -75,8 +76,8 @@ public class SubPropAtomicIndices {
 
     public boolean isEmpty(){
         return
-                currentSubPropString == null ||
-                currentSubPropString.isEmpty() ||
+                superSubPropString == null ||
+                superSubPropString.isEmpty() ||
                 atomicBeginIndex < 0 ||
                 atomicLength < 1 ||
                 tableXIndex < 0 ||
