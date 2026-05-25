@@ -103,7 +103,7 @@ public class TruthTable {
                     }
                     if (op == null)
                         throw new IllegalStateException("NO OPERATOR FOUND");
-                    fillInColumn(subProp, atomic[0], atomicsData[0], op, atomic[1], atomicsData[1]);
+                    fillInColumn(subProp, atomicsData,   atomic[0], op, atomic[1]);
                 }
 
             }
@@ -252,17 +252,14 @@ public class TruthTable {
 
     private void fillInColumn(
             SubProposition subProp,
+            SubPropAtomicIndices[] atomicsData,
 
             SubProposition atomic1,
-            TableMode atomic1TableMode,
-            int atomic1TableXIndex,
-
             Operator op,
-
-            SubProposition atomic2,
-            TableMode atomic2TableMode,
-            int atomic2TableXIndex
+            SubProposition atomic2
     ) {
+        if (atomicsData.length != 2)
+            throw new IllegalStateException("CRITICAL ERROR: EXACTLY TWO ATOMIC PLACEHOLDERS MUST BE PASSED.");
 
         boolean noOp = false;
         for (Operator thisOp : Operator.getParentheses()) {
@@ -282,34 +279,29 @@ public class TruthTable {
 
         for (int y = 0; y < rowCount; y++) {
 
-            AtomicProposition atomic1FromTableIndex = null;
-            AtomicProposition atomic2FromTableIndex = null;
+            AtomicProposition[] atomicsFromTableIndices = new AtomicProposition[atomicsData.length];
+            String[] newAtomicStrings = new String[atomicsData.length];
+            boolean atomicsTruth[] = new boolean[atomicsData.length];
 
-            String newAtomic1String;
-            String newAtomic2String;
+            // exakt 2 durchläufe
+            for (int a = 0; a < atomicsData.length; a++){
+                if (atomicsData[a].getTableMode() == TableMode.ATOMIC) {
+                    atomicsFromTableIndices[a] = atomicPropTable[atomicsData[0].getTableXIndex()][y];
+                } else if (atomicsData[a].getTableMode() == TableMode.SUB) {
+                    atomicsFromTableIndices[a] = subPropTable.get(y).get(atomicsData[0].getTableXIndex());
+                }
+                newAtomicStrings[a] = atomicsFromTableIndices[a].getPropString();
+                atomicsTruth[a] = atomicsFromTableIndices[a].isTruth();
 
-            if (atomic1TableMode == TableMode.ATOMIC) {
-                atomic1FromTableIndex = atomicPropTable[atomic1TableXIndex][y];
-            } else if (atomic1TableMode == TableMode.SUB) {
-                atomic1FromTableIndex = subPropTable.get(y).get(atomic1TableXIndex);
             }
-            if (atomic2TableMode == TableMode.ATOMIC) {
-                atomic2FromTableIndex = atomicPropTable[atomic2TableXIndex][y];
-            } else if (atomic2TableMode == TableMode.SUB) {
-                atomic2FromTableIndex = subPropTable.get(y).get(atomic2TableXIndex);
-            }
-            newAtomic1String = atomic1FromTableIndex.getPropString();
-            newAtomic2String = atomic2FromTableIndex.getPropString();
 
-            boolean atomic1Truth = atomic1FromTableIndex.isTruth();
-            boolean atomic2Truth = atomic2FromTableIndex.isTruth();
             if (atomic1.isNegation())
-                atomic1Truth = !atomic1Truth;
+                atomicsTruth[0] = !atomicsTruth[0];
             if (atomic2.isNegation())
-                atomic2Truth = !atomic2Truth;
+                atomicsTruth[1] = !atomicsTruth[1];
 
-            if (atomic1.getPropString().equals(newAtomic1String) && atomic2.getPropString().equals(newAtomic2String)) {
-                boolean cpTruth = CompoundProposition.getCompoundTruthValue(atomic1Truth, op, atomic2Truth);
+            if (atomic1.getPropString().equals(newAtomicStrings[0]) && atomic2.getPropString().equals(newAtomicStrings[1])) {
+                boolean cpTruth = CompoundProposition.getCompoundTruthValue(atomicsTruth[0], op, atomicsTruth[1]);
                 if (subProp.isNegation()) {
                     cpTruth = !cpTruth;
                 }
@@ -327,18 +319,17 @@ public class TruthTable {
             SubProposition subProp,
 
             SubProposition atomic1,
-            TableMode atomic1TableMode,
-            int atomic1TableXIndex
+            SubPropAtomicIndices atomic1Data
     ) {
         for (int y = 0; y < rowCount; y++) {
 
             AtomicProposition atomic1FromTableIndex = null;
             String newAtomic1String;
 
-            if (atomic1TableMode == TableMode.ATOMIC) {
-                atomic1FromTableIndex = atomicPropTable[atomic1TableXIndex][y];
-            } else if (atomic1TableMode == TableMode.SUB) {
-                atomic1FromTableIndex = subPropTable.get(y).get(atomic1TableXIndex);
+            if (atomic1Data.getTableMode() == TableMode.ATOMIC) {
+                atomic1FromTableIndex = atomicPropTable[atomic1Data.getTableXIndex()][y];
+            } else if (atomic1Data.getTableMode() == TableMode.SUB) {
+                atomic1FromTableIndex = subPropTable.get(y).get(atomic1Data.getTableXIndex());
             }
 
             newAtomic1String = atomic1FromTableIndex.getPropString();
