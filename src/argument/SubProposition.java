@@ -19,6 +19,11 @@ public class SubProposition extends AtomicProposition {
         this(atomicProp.getPropString(), atomicProp.getMode(), false, atomicProp.isTruth());
     }
 
+    public SubProposition(SubProposition subProp){
+        super(subProp.getPropString(), subProp.getMode(), subProp.isTruth());
+        this.negation = subProp.negation;
+    }
+
     public boolean isNegation() {
         return negation;
     }
