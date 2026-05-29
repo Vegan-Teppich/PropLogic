@@ -359,6 +359,50 @@ public class TruthTable {
     }
 
     public void print() {
+        int minStringLength = 5;
+        printTablePropStrings(minStringLength);
+
+        String tablePosPrintTrue = true + " ";
+        String tablePosPrintFalse = false + "";
+        for (int y = 0; y < rowCount; y++) {
+            for (int x = 0; x < atomicPropTable.length + subPropTable.get(0).size(); x++) {
+                if (x == 0)
+                    System.out.print(" | ");
+
+                if (x < atomicPropTable.length) {
+                    if (atomicPropTable[x][y].isTruth()) {
+                        System.out.print(tablePosPrintTrue);
+                    } else {
+                        System.out.print(tablePosPrintFalse);
+                    }
+
+                    if (atomicPropTable[x][0].getPropString().length() > minStringLength){
+                        for (int i = 0; i < atomicPropTable[x][0].getPropString().length() - minStringLength; i++)
+                            System.out.print(" ");
+
+                    }
+                    System.out.print(" | ");
+                } else {
+                    if (subPropTable.get(y).get(x - atomicPropTable.length).isTruth()) {
+                        System.out.print(tablePosPrintTrue);
+                    } else {
+                        System.out.print(tablePosPrintFalse);
+                    }
+                    if (subPropTable.get(0).get(x - atomicPropTable.length).getPropString().length() > minStringLength){
+                        for (int i = 0; i < subPropTable.get(0).get(x - atomicPropTable.length).getPropString().length() - minStringLength; i++)
+                            System.out.print(" ");
+
+                    }
+                    System.out.print(" | ");
+
+                }
+
+            }
+            System.out.println();
+        }
+    }
+
+    private void printTablePropStrings(int minStringLength){
         for (int x = 0; x < atomicPropTable.length + subPropTable.get(0).size(); x++) {
             if (x == 0)
                 System.out.print(" | ");
@@ -370,44 +414,14 @@ public class TruthTable {
                 propString = subPropTable.get(0).get(x - atomicPropTable.length).getPropString();
             }
             System.out.print(propString);
-            for (int i = 0; i < 5 - propString.length(); i++) {
+            for (int i = 0; i < minStringLength - propString.length(); i++) {
                 System.out.print(" ");
             }
             System.out.print(" | ");
-            //  + "     | "
         }
 
 
         System.out.println();
-
-        String tablePosPrintTrue = true + "  | ";
-        String tablePosPrintFalse = false + " | ";
-        for (int y = 0; y < rowCount; y++) {
-            for (int x = 0; x < atomicPropTable.length + subPropTable.get(0).size(); x++) {
-                if (x == 0)
-                    System.out.print(" | ");
-
-                if (x < atomicPropTable.length) {
-                    if (atomicPropTable[x][y].isTruth()) {
-                        System.out.print(tablePosPrintTrue);
-
-                    } else {
-                        System.out.print(tablePosPrintFalse);
-
-                    }
-                } else {
-                    if (subPropTable.get(y).get(x - atomicPropTable.length).isTruth()) {
-                        System.out.print(tablePosPrintTrue);
-                    } else {
-                        System.out.print(tablePosPrintFalse);
-
-                    }
-
-                }
-
-            }
-            System.out.println();
-        }
     }
 
     public void checkAtomicDataState(SubPropAtomicIndices[] atomicsData) {
