@@ -6,8 +6,7 @@ public class SubProposition extends AtomicProposition {
     protected boolean negation;
 
     public SubProposition(String propString, Mode mode, boolean negation) {
-        super(propString, mode);
-        this.negation = negation;
+        this(propString, mode, negation, false);
     }
 
     public SubProposition(String propString, Mode mode, boolean negation, boolean truth) {
