@@ -297,7 +297,6 @@ public class TruthTable {
                 atomicsTruth[a] = atomicsFromTableIndices[a].isTruth();
 
 
-
                 if (atomics[a].isNegation())
                     atomicsTruth[a] = !atomicsTruth[a];
 
@@ -359,53 +358,59 @@ public class TruthTable {
     }
 
     public void print() {
-        int minStringLength = 5;
-        printTablePropStrings(minStringLength);
+        int minStringLength = (false + "").length();
+        String separator = " | ";
 
-        String tablePosPrintTrue = true + " ";
-        String tablePosPrintFalse = false + "";
-        for (int y = 0; y < rowCount; y++) {
-            for (int x = 0; x < atomicPropTable.length + subPropTable.get(0).size(); x++) {
-                if (x == 0)
-                    System.out.print(" | ");
+        printTablePropStrings(minStringLength, separator);
 
+        int xLength = atomicPropTable.length + subPropTable.get(0).size();
+        int yLength = rowCount;
+
+        for (int y = 0; y < yLength; y++) {
+            System.out.print(separator);
+            for (int x = 0; x < xLength; x++) {
+
+                TableMode tableMode;
                 if (x < atomicPropTable.length) {
-                    if (atomicPropTable[x][y].isTruth()) {
-                        System.out.print(tablePosPrintTrue);
-                    } else {
-                        System.out.print(tablePosPrintFalse);
-                    }
-
-                    if (atomicPropTable[x][0].getPropString().length() > minStringLength){
-                        for (int i = 0; i < atomicPropTable[x][0].getPropString().length() - minStringLength; i++)
-                            System.out.print(" ");
-
-                    }
-                    System.out.print(" | ");
+                    tableMode = TableMode.ATOMIC;
                 } else {
-                    if (subPropTable.get(y).get(x - atomicPropTable.length).isTruth()) {
-                        System.out.print(tablePosPrintTrue);
-                    } else {
-                        System.out.print(tablePosPrintFalse);
-                    }
-                    if (subPropTable.get(0).get(x - atomicPropTable.length).getPropString().length() > minStringLength){
-                        for (int i = 0; i < subPropTable.get(0).get(x - atomicPropTable.length).getPropString().length() - minStringLength; i++)
-                            System.out.print(" ");
-
-                    }
-                    System.out.print(" | ");
-
+                    tableMode = TableMode.SUB;
                 }
+                printPropTruth(tableMode, new int[]{x, y}, minStringLength, separator);
 
             }
             System.out.println();
         }
     }
 
-    private void printTablePropStrings(int minStringLength){
+    private void printPropTruth(TableMode tableMode, int[] pos2d, int minStringLength, String separator) {
+        int posX = pos2d[0];
+        int posY = pos2d[1];
+        String tablePosPrintTrue = true + " ";
+        String tablePosPrintFalse = false + "";
+
+        AtomicProposition prop = null;
+        if (tableMode == TableMode.ATOMIC) {
+            prop = atomicPropTable[posX][posY];
+        } else if (tableMode == TableMode.SUB) {
+            prop = subPropTable.get(posY).get(posX - atomicPropTable.length);
+        }
+
+        if (prop.isTruth()) {
+            System.out.print(tablePosPrintTrue);
+        } else {
+            System.out.print(tablePosPrintFalse);
+        }
+        for (int i = 0; i < prop.getPropString().length() - minStringLength; i++)
+            System.out.print(" ");
+        System.out.print(separator);
+
+    }
+
+    private void printTablePropStrings(int minStringLength, String separator) {
+
+        System.out.print(separator);
         for (int x = 0; x < atomicPropTable.length + subPropTable.get(0).size(); x++) {
-            if (x == 0)
-                System.out.print(" | ");
 
             String propString;
             if (x < atomicPropTable.length) {
@@ -417,11 +422,10 @@ public class TruthTable {
             for (int i = 0; i < minStringLength - propString.length(); i++) {
                 System.out.print(" ");
             }
-            System.out.print(" | ");
+            System.out.print(separator);
         }
-
-
         System.out.println();
+
     }
 
     public void checkAtomicDataState(SubPropAtomicIndices[] atomicsData) {
