@@ -3,14 +3,15 @@ package compoundProposition;
 import argument.Proposition;
 
 public class CompoundProposition extends Proposition {
-    private AtomicProposition prop1;
+    public static final int opCount = 1;
+    public static final int propCount = 2;
+    private AtomicProposition[] prop = new AtomicProposition[propCount];
     private Operator op;
-    private AtomicProposition prop2;
     public CompoundProposition(AtomicProposition prop1, Operator op, AtomicProposition prop2, Mode mode){
         super(prop1.getPropString() + op.getSyntax() + prop2.getPropString(), mode);
-        this.prop1 = prop1;
+        this.prop[0] = prop1;
         this.op = op;
-        this.prop2 = prop2;
+        this.prop[1] = prop2;
         super.setTruth(getCompoundTruthValue(prop1.isTruth(), op, prop2.isTruth()));
 
     }
@@ -51,13 +52,11 @@ public class CompoundProposition extends Proposition {
         throw otherOpEx;
     }
 
-    public AtomicProposition getProp1() {
-        return prop1;
+    public AtomicProposition[] getProp() {
+        return prop;
     }
     public Operator getOperator() {
         return op;
     }
-    public AtomicProposition getProp2() {
-        return prop2;
-    }
+
 }

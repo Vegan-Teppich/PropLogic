@@ -16,6 +16,8 @@ public class TruthTable {
     List<List<SubProposition>> subPropTable = new ArrayList<>();
     int rowCount;
 
+    IllegalStateException noAtomicFoundEx = new IllegalStateException("CHECK WHY THERE WAS LESS THAN ONE ATOMIC_PROPS FOUND IN PREVIOUS SUB_PROP");
+
     public TruthTable(Argument arg) {
         this.arg = arg;
         fillInTable();
@@ -32,7 +34,6 @@ public class TruthTable {
         atomicTableTruthAssignmentEnumeration(atomicProps);
 
 
-        // subProps
         for (int p = 0; p < props.length; p++) {
 
             Proposition prop = props[p];
@@ -43,25 +44,45 @@ public class TruthTable {
                 SubProposition subProp = subProps.get(x);
                 String subPropString = subProp.getPropString();
 
+                SubPropAtomicIndices[] atomicsData = new SubPropAtomicIndices[CompoundProposition.propCount];
+                SubProposition[] atomics;
+                Operator op;
 
-                // subProps (subProps) code sehr ähnlich deswegen bitte verbessern
-                // wenn vergleichbare subProps vorhanden sind
-                SubPropAtomicIndices[] atomicsData = new SubPropAtomicIndices[2];
                 atomicsData[0] = new SubPropAtomicIndices();
                 atomicsData[1] = new SubPropAtomicIndices();
                 atomicsData[0].setSuperSubPropString(subPropString);
                 atomicsData[1].setSuperSubPropString(subPropString);
 
+                //if (x == 0 && !subProp.getPropString().equals("()"))
                 evaluateSubPropsBottomUp(atomicsData);
 
+                atomics = extractAtomicsFromSubProp(subProp, atomicsData, mode);
+                op = extractOperatorFromSubProp(subPropString, atomicsData);
 
-                searchOperatorsInSubProp(subProp, atomicsData, mode);
+
+                fillInColumn(subProp, atomicsData, atomics, op);
 
             }
         }
     }
 
-    private void searchOperatorsInSubProp(SubProposition subProp, SubPropAtomicIndices[] atomicsData, AtomicProposition.Mode mode) {
+    private Operator extractOperatorFromSubProp(String subPropString, SubPropAtomicIndices[] atomicsData) {
+        Operator op = null;
+        if (atomicsData[0].getAtomicBeginIndex() > -1 && atomicsData[1].getAtomicBeginIndex() > -1) {
+            String opSubstring = subPropString.substring(atomicsData[0].getAtomicEndIndex(), atomicsData[1].getAtomicBeginIndex());
+            for (Operator thisOp : Operator.getBinary()) {
+                if (opSubstring.contains(thisOp.getSyntax() + "")) {
+                    op = thisOp;
+                    break;
+                }
+            }
+            if (op == null)
+                throw new IllegalStateException("NO RELEVANT OPERATOR FOUND IN SUB_PROP");
+        }
+        return op;
+    }
+
+    private SubProposition[] extractAtomicsFromSubProp(SubProposition subProp, SubPropAtomicIndices[] atomicsData, AtomicProposition.Mode mode) {
 
         checkAtomicDataState(atomicsData);
 
@@ -69,7 +90,6 @@ public class TruthTable {
         String subPropString = subProp.getPropString();
 
         SubProposition[] atomics = new SubProposition[atomicsData.length];
-        Operator op = null;
 
         if (atomicsData[0].getAtomicBeginIndex() > -1) {
 
@@ -78,9 +98,9 @@ public class TruthTable {
 
             // atomicsData.length ist immer 2
             for (int a = 0; a < atomicsData.length; a++) {
+
                 String atomicString;
                 boolean atomicNegation = false;
-
 
                 if (atomicsData[a].getAtomicBeginIndex() > -1) {
                     if (atomicsData[a].getAtomicBeginIndex() > 0)
@@ -89,27 +109,13 @@ public class TruthTable {
                     atomicString = subPropString.substring(atomicsData[a].getAtomicBeginIndex(), atomicsData[a].getAtomicEndIndex());
                     atomics[a] = new SubProposition(atomicString, mode, atomicNegation);
 
-                    if (a == 1) {
-                        String opSubstring = subPropString.substring(atomicsData[0].getAtomicEndIndex(), atomicsData[1].getAtomicBeginIndex());
-                        for (Operator thisOp : Operator.getBinary()) {
-                            if (opSubstring.contains(thisOp.getSyntax() + "")) {
-                                op = thisOp;
-                                break;
-                            }
-                        }
-                        if (op == null)
-                            throw new IllegalStateException("NO OPERATOR FOUND");
-                    }
                 }
-
             }
 
-
-            fillInColumn(subProp, atomicsData, atomics, op);
-
         } else {
-            throw new IllegalStateException("CHECK WHY THERE WAS NO FIRST ATOMIC_PROP FOUND IN SUB_PROP");
+            throw noAtomicFoundEx;
         }
+        return atomics;
     }
 
     private void evaluateSubPropsBottomUp(SubPropAtomicIndices[] atomicsData) {
@@ -121,6 +127,7 @@ public class TruthTable {
         String subPropString = atomicsData[0].getSuperSubPropString();
 
         for (int tm = 0; tm < TableMode.values().length; tm++) {
+
             if (tm == 0) {
                 tableMode = TableMode.SUB;
             } else if (tm == 1) {
@@ -128,7 +135,9 @@ public class TruthTable {
             }
 
             if (tableMode == TableMode.SUB) {
-                if (subPropTable.get(0).size() < 1) {
+
+                // wenn keine vergleichbaren subProps vorhanden sind
+                if (subPropTable.get(0).size() <= 1) {
                     continue;
                 }
                 for (int x = subPropTable.get(0).size() - 1; x >= 0; x--) {
@@ -181,8 +190,6 @@ public class TruthTable {
                 }
             }
         }
-
-
     }
 
     private void convAtomicsRightPos(SubPropAtomicIndices[] previousAtomics) {
@@ -358,11 +365,17 @@ public class TruthTable {
     }
 
     public void print() {
+
         int minStringLength = (false + "").length();
         String separator = " | ";
 
-        printTablePropStrings(minStringLength, separator);
+        printTablePropStrings(separator, minStringLength);
 
+        printTruthTable(separator, minStringLength);
+
+    }
+
+    private void printTruthTable(String separator, int minStringLength) {
         int xLength = atomicPropTable.length + subPropTable.get(0).size();
         int yLength = rowCount;
 
@@ -407,7 +420,7 @@ public class TruthTable {
 
     }
 
-    private void printTablePropStrings(int minStringLength, String separator) {
+    private void printTablePropStrings(String separator, int minStringLength) {
 
         System.out.print(separator);
         for (int x = 0; x < atomicPropTable.length + subPropTable.get(0).size(); x++) {
