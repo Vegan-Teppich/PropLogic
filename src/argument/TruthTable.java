@@ -4,19 +4,15 @@ import compoundProposition.CompoundProposition;
 import compoundProposition.Operator;
 import compoundProposition.AtomicProposition;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class TruthTable {
 
     Argument arg;
     AtomicProposition[][] atomicPropTable;
     List<List<SubProposition>> subPropTable = new ArrayList<>();
-    int rowCount;
-
-    IllegalStateException noAtomicFoundEx = new IllegalStateException("CHECK WHY THERE WAS LESS THAN ONE ATOMIC_PROPS FOUND IN PREVIOUS SUB_PROP");
+    int rowYCount;
+    int conclusionBeginIndex = -1;
 
     public TruthTable(Argument arg) {
         this.arg = arg;
@@ -113,7 +109,7 @@ public class TruthTable {
             }
 
         } else {
-            throw noAtomicFoundEx;
+            throw new IllegalStateException("CHECK WHY THERE IS NO FIRST ATOMIC_PROP IN PREVIOUS SUB_PROP");
         }
         return atomics;
     }
@@ -207,14 +203,14 @@ public class TruthTable {
     }
 
     private void atomicTableTruthAssignmentEnumeration(Collection<AtomicProposition> atomicProps) {
-        int adjacentTruthRows = rowCount;
+        int adjacentTruthRows = rowYCount;
         int x = -1;
         for (AtomicProposition atomicProp : atomicProps) {
             x++;
             adjacentTruthRows = adjacentTruthRows / 2;
             boolean truth = false;
             int y = -1;
-            for (int y1 = 0; y1 < rowCount / adjacentTruthRows; y1++) {
+            for (int y1 = 0; y1 < rowYCount / adjacentTruthRows; y1++) {
                 truth = !truth;
                 for (int y2 = 0; y2 < adjacentTruthRows; y2++) {
                     y++;
@@ -225,13 +221,13 @@ public class TruthTable {
     }
 
     private void calculateRowsAndDefineSpaceInTables(int atomicPropCount) {
-        rowCount = 1;
+        rowYCount = 1;
         for (int x = 0; x < atomicPropCount; x++) {
-            rowCount = rowCount * 2;
+            rowYCount = rowYCount * 2;
         }
-        atomicPropTable = new AtomicProposition[atomicPropCount][rowCount];
+        atomicPropTable = new AtomicProposition[atomicPropCount][rowYCount];
 
-        for (int y = 0; y < rowCount; y++) {
+        for (int y = 0; y < rowYCount; y++) {
             subPropTable.add(new ArrayList<>());
         }
     }
@@ -281,7 +277,7 @@ public class TruthTable {
         }
 
 
-        for (int y = 0; y < rowCount; y++) {
+        for (int y = 0; y < rowYCount; y++) {
 
             AtomicProposition[] atomicsFromTableIndices = new AtomicProposition[atomicsData.length];
             String[] newAtomicStrings = new String[atomicsData.length];
@@ -377,7 +373,7 @@ public class TruthTable {
 
     private void printTruthTable(String separator, int minStringLength) {
         int xLength = atomicPropTable.length + subPropTable.get(0).size();
-        int yLength = rowCount;
+        int yLength = rowYCount;
 
         for (int y = 0; y < yLength; y++) {
             System.out.print(separator);
@@ -444,5 +440,50 @@ public class TruthTable {
     public void checkAtomicDataState(SubPropAtomicIndices[] atomicsData) {
         if (atomicsData.length != 2)
             throw new IllegalStateException("CRITICAL ERROR: EXACTLY TWO ATOMIC PLACEHOLDERS MUST BE PASSED.");
+    }
+
+    public boolean isArgumentValid() {
+        setConclusionBeginIndex();
+
+        return searchInvalidRow();
+    }
+
+    private boolean searchInvalidRow() {
+        for (int y = 0; y < rowYCount; y++) {
+            for (int xC = conclusionBeginIndex; xC < subPropTable.get(y).size(); xC++) {
+                if (subPropTable.get(y).get(xC).getMode() != AtomicProposition.Mode.CONCLUSION)
+                    throw new IllegalStateException("CHECK WHY INDICES ARE NO CONCLUSION");
+
+                if (!subPropTable.get(y).get(xC).isTruth()) {
+
+                    for (int xP = 0; xP < conclusionBeginIndex; xP++) {
+                        if (subPropTable.get(y).get(xP).getMode() != AtomicProposition.Mode.PREMISE)
+                            throw new IllegalStateException("CHECK WHY INDICES ARE NO PREMISE");
+
+                        if (!subPropTable.get(y).get(xP).isTruth())
+                            break;
+                        if (xP == conclusionBeginIndex-1)
+                            return false;
+                    }
+
+                    break;
+                }
+            }
+        }
+        return true;
+    }
+
+    private void setConclusionBeginIndex() {
+        if (conclusionBeginIndex <= -1) {
+            conclusionBeginIndex = subPropTable.get(0).size() - 1;
+            for (int x = conclusionBeginIndex; x >= 0; x--) {
+                if (subPropTable.get(0).get(x).getMode() == AtomicProposition.Mode.CONCLUSION) {
+                    conclusionBeginIndex = x;
+                } else {
+                    break;
+                }
+            }
+        }
+
     }
 }

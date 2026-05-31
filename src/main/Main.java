@@ -2,6 +2,7 @@ package main;
 
 import argument.Argument;
 import argument.TruthTable;
+
 import java.util.Scanner;
 
 public class Main {
@@ -13,6 +14,7 @@ public class Main {
     static Argument arg;
 
     public static void main(String[] args) {
+
         arg = input();
 
         if (!arg.cleanAndCheckIfArgumentIsWellFormedFormula())
@@ -23,15 +25,28 @@ public class Main {
         TruthTable tt = new TruthTable(arg);
 
         tt.print();
+
+        System.out.println();
+
+        printValid(tt.isArgumentValid());
+
     }
 
-    public static Argument input(){
+    public static void printValid(boolean valid){
+        if (valid) {
+            System.out.println("✓ The argument is valid.");
+        } else {
+            System.out.println("X The argument is invalid.");
+        }
+    }
+
+    public static Argument input() {
         final String cancelPhrase = "back";
 
         Argument arg;
         String[] premises = {""};
         String[] conclusions = {""};
-        while (!inputComplete){
+        while (!inputComplete) {
             System.out.println("How many premises does your argument have?");
             numberOfPremises = Integer.parseInt(scanner.nextLine());
             System.out.println("How many conclusions does your argument have?");
@@ -40,23 +55,23 @@ public class Main {
             premises = new String[numberOfPremises];
             conclusions = new String[numberOfConclusions];
 
-            for (int p = 0; p < numberOfPremises+numberOfConclusions; p++){
+            for (int p = 0; p < numberOfPremises + numberOfConclusions; p++) {
                 System.out.print("Tell me the ");
-                System.out.print((p+1) + ".");
-                if (p < numberOfPremises){
+                System.out.print((p + 1) + ".");
+                if (p < numberOfPremises) {
                     System.out.println(" premise");
-                }else {
+                } else {
                     System.out.println(" conclusion");
                 }
                 String input = scanner.nextLine();
-                if (input.trim().equalsIgnoreCase(cancelPhrase)){
+                if (input.trim().equalsIgnoreCase(cancelPhrase)) {
                     inputCanceled = true;
                     break;
                 }
-                if (p < numberOfPremises){
+                if (p < numberOfPremises) {
                     premises[p] = input;
-                }else {
-                    conclusions[p-numberOfPremises] = input;
+                } else {
+                    conclusions[p - numberOfPremises] = input;
                 }
             }
             if (inputCanceled)
@@ -69,7 +84,7 @@ public class Main {
         return arg;
     }
 
-    public static String replaceSubstring(String string, int beginIndex, int endIndex, String replaceSubstring){
+    public static String replaceSubstring(String string, int beginIndex, int endIndex, String replaceSubstring) {
         if (beginIndex >= string.length() || endIndex > string.length())
             throw new IllegalArgumentException();
         if (beginIndex > endIndex)
