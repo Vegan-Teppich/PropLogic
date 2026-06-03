@@ -3,24 +3,23 @@ package argument;
 import compoundProposition.AtomicProposition;
 
 public class SubProposition extends AtomicProposition {
+    protected Mode mode;
     protected boolean negation;
+    protected int propIndex;
 
-    public SubProposition(String propString, Mode mode, boolean negation) {
-        this(propString, mode, negation, false);
+    public SubProposition(String propString, Mode mode, boolean negation, int propIndex) {
+        this(propString, mode, negation, propIndex, false);
     }
 
-    public SubProposition(String propString, Mode mode, boolean negation, boolean truth) {
-        super(propString, mode, truth);
+    public SubProposition(String propString, Mode mode, boolean negation, int propIndex, boolean truth) {
+        super(propString, truth);
+        this.mode = mode;
         this.negation = negation;
-    }
-
-    public SubProposition(AtomicProposition atomicProp){
-        this(atomicProp.getPropString(), atomicProp.getMode(), false, atomicProp.isTruth());
+        this.propIndex = propIndex;
     }
 
     public SubProposition(SubProposition subProp){
-        super(subProp.getPropString(), subProp.getMode(), subProp.isTruth());
-        this.negation = subProp.negation;
+        this(subProp.getPropString(), subProp.getMode(), subProp.isNegation(), subProp.getPropIndex(), subProp.isTruth());
     }
 
     public boolean isNegation() {
@@ -29,5 +28,16 @@ public class SubProposition extends AtomicProposition {
 
     public void setNegation(boolean negation) {
         this.negation = negation;
+    }
+
+    public int getPropIndex() {
+        return propIndex;
+    }
+    public Mode getMode() {
+        return mode;
+    }
+
+    public void setMode(Mode mode) {
+        this.mode = mode;
     }
 }

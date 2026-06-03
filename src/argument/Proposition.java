@@ -9,11 +9,18 @@ import java.util.Objects;
 
 public class Proposition extends AtomicProposition {
     private List<SubProposition> subProps;
+
     private int[] parenthesesCount;
+    protected Mode mode;
+    protected int propIndex;
+    protected int subPropIndexOfCompleteProp;
+
 
     //private int[] index = new int[2];
-    public Proposition(String propString, Mode mode) {
-        super(propString, mode);
+    public Proposition(String propString, Mode mode, int propIndex) {
+        super(propString);
+        this.mode = mode;
+        this.propIndex = propIndex;
         init();
     }
 
@@ -71,7 +78,7 @@ public class Proposition extends AtomicProposition {
         ArrayList<Integer> usedOpeningParenthesesIndices = new ArrayList<>();
 
         closingParenthesisIndex--;
-        for (int i = 0; i < parenthesesCount[0]; i++) {
+        for (int i = 0; i < parenthesesCount[1]; i++) {
 
             // handle closingParentheses
             if ((closingParenthesisIndex = propString.indexOf(Operator.CLOSING_PARENTHESIS.getSyntax(), closingParenthesisIndex + 1)) != -1)
@@ -107,9 +114,11 @@ public class Proposition extends AtomicProposition {
                 }
                 break;
             }
-            String parentheticalPropString = propString.substring(openingParenthesisIndex, closingParenthesisIndex + 1);
+            String subPropString = propString.substring(openingParenthesisIndex, closingParenthesisIndex + 1);
             //if (negationExists)
-            output.add(new SubProposition(parentheticalPropString, mode, negationExists));
+            output.add(new SubProposition(subPropString, mode, negationExists, propIndex));
+            if (i == parenthesesCount[1]-1)
+                subPropIndexOfCompleteProp = i;
         }
         return output;
     }
@@ -160,6 +169,22 @@ public class Proposition extends AtomicProposition {
 
     public List<SubProposition> getSubProps() {
         return subProps;
+    }
+
+    public int getSubPropIndexOfCompleteProp() {
+        return subPropIndexOfCompleteProp;
+    }
+
+    public void setSubPropIndexOfCompleteProp(int subPropIndexOfCompleteProp) {
+        this.subPropIndexOfCompleteProp = subPropIndexOfCompleteProp;
+    }
+
+    public Mode getMode() {
+        return mode;
+    }
+
+    public void setMode(Mode mode) {
+        this.mode = mode;
     }
 
     /*

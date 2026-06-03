@@ -12,7 +12,7 @@ public class TruthTable {
     AtomicProposition[][] atomicPropTable;
     List<List<SubProposition>> subPropTable = new ArrayList<>();
     int rowYCount;
-    int conclusionBeginIndex = -1;
+    int conclusionBeginXIndex = -1;
 
     public TruthTable(Argument arg) {
         this.arg = arg;
@@ -103,7 +103,7 @@ public class TruthTable {
                         if (subPropString.charAt(atomicsData[a].getAtomicBeginIndex() - 1) == Operator.NEGATION.getSyntax())
                             atomicNegation = true;
                     atomicString = subPropString.substring(atomicsData[a].getAtomicBeginIndex(), atomicsData[a].getAtomicEndIndex());
-                    atomics[a] = new SubProposition(atomicString, mode, atomicNegation);
+                    atomics[a] = new SubProposition(atomicString, mode, atomicNegation, subProp.getPropIndex());
 
                 }
             }
@@ -214,7 +214,7 @@ public class TruthTable {
                 truth = !truth;
                 for (int y2 = 0; y2 < adjacentTruthRows; y2++) {
                     y++;
-                    atomicPropTable[x][y] = new AtomicProposition(atomicProp.getPropString(), atomicProp.getMode(), truth);
+                    atomicPropTable[x][y] = new AtomicProposition(atomicProp.getPropString(), truth);
                 }
             }
         }
@@ -365,10 +365,63 @@ public class TruthTable {
         int minStringLength = (false + "").length();
         String separator = " | ";
 
-        printTablePropStrings(separator, minStringLength);
+        printPropLettersAndIndicesRow(separator, minStringLength);
+
+        printTablePropStringsRow(separator, minStringLength);
 
         printTruthTable(separator, minStringLength);
 
+    }
+
+    private void printPropLettersAndIndicesRow(String separator, int minStringLength) {
+        int propCount = atomicPropTable.length + subPropTable.get(0).size();
+        int propIndex = -1;
+
+        System.out.print(separator);
+        for (int x = 0; x < propCount; x++){
+            if (x < atomicPropTable.length) {
+                for (int i = 0; i < minStringLength; i++)
+                    System.out.print(" ");
+                if (x > 0)
+                    printNoSeparatorLength(separator);
+            }else {
+                String buildString = "";
+                int subPropX = x-atomicPropTable.length;
+                AtomicProposition.Mode mode = subPropTable.get(0).get(subPropX).getMode();
+                int newPropIndex = subPropTable.get(0).get(subPropX).getPropIndex();
+                String subPropString = subPropTable.get(0).get(subPropX).getPropString();
+                if (newPropIndex != propIndex){
+                    propIndex = newPropIndex;
+
+                    if (mode == AtomicProposition.Mode.PREMISE){
+                        buildString += "P";
+                    } else if (mode == AtomicProposition.Mode.CONCLUSION) {
+                        buildString += "C";
+                    }
+                    buildString += propIndex+1 + ")";
+                    System.out.print(separator);
+                    System.out.print(buildString);
+
+                }else {
+                    printNoSeparatorLength(separator);
+                }
+                if (subPropString.length() > minStringLength){
+                    for (int i = 0; i < subPropString.length() - buildString.length(); i++){
+                        System.out.print(" ");
+                    }
+                }else {
+                    for (int i = 0; i < minStringLength - buildString.length(); i++)
+                        System.out.print(" ");
+                }
+            }
+        }
+        System.out.print(separator);
+        System.out.println();
+    }
+
+    private void printNoSeparatorLength(String separator){
+        for (int i = 0; i < separator.length(); i++)
+            System.out.print(" ");
     }
 
     private void printTruthTable(String separator, int minStringLength) {
@@ -416,10 +469,11 @@ public class TruthTable {
 
     }
 
-    private void printTablePropStrings(String separator, int minStringLength) {
+    private void printTablePropStringsRow(String separator, int minStringLength) {
+        int propIndices = atomicPropTable.length + subPropTable.get(0).size();
 
         System.out.print(separator);
-        for (int x = 0; x < atomicPropTable.length + subPropTable.get(0).size(); x++) {
+        for (int x = 0; x < propIndices; x++) {
 
             String propString;
             if (x < atomicPropTable.length) {
@@ -445,24 +499,25 @@ public class TruthTable {
     public boolean isArgumentValid() {
         setConclusionBeginIndex();
 
+        // TODO: soll nach props suchen und nicht nach subProps
         return searchInvalidRow();
     }
 
     private boolean searchInvalidRow() {
         for (int y = 0; y < rowYCount; y++) {
-            for (int xC = conclusionBeginIndex; xC < subPropTable.get(y).size(); xC++) {
+            for (int xC = conclusionBeginXIndex; xC < subPropTable.get(y).size(); xC++) {
                 if (subPropTable.get(y).get(xC).getMode() != AtomicProposition.Mode.CONCLUSION)
                     throw new IllegalStateException("CHECK WHY INDICES ARE NO CONCLUSION");
 
                 if (!subPropTable.get(y).get(xC).isTruth()) {
 
-                    for (int xP = 0; xP < conclusionBeginIndex; xP++) {
+                    for (int xP = 0; xP < conclusionBeginXIndex; xP++) {
                         if (subPropTable.get(y).get(xP).getMode() != AtomicProposition.Mode.PREMISE)
                             throw new IllegalStateException("CHECK WHY INDICES ARE NO PREMISE");
 
                         if (!subPropTable.get(y).get(xP).isTruth())
                             break;
-                        if (xP == conclusionBeginIndex-1)
+                        if (xP == conclusionBeginXIndex -1)
                             return false;
                     }
 
@@ -474,11 +529,11 @@ public class TruthTable {
     }
 
     private void setConclusionBeginIndex() {
-        if (conclusionBeginIndex <= -1) {
-            conclusionBeginIndex = subPropTable.get(0).size() - 1;
-            for (int x = conclusionBeginIndex; x >= 0; x--) {
+        if (conclusionBeginXIndex <= -1) {
+            conclusionBeginXIndex = subPropTable.get(0).size() - 1;
+            for (int x = conclusionBeginXIndex; x >= 0; x--) {
                 if (subPropTable.get(0).get(x).getMode() == AtomicProposition.Mode.CONCLUSION) {
-                    conclusionBeginIndex = x;
+                    conclusionBeginXIndex = x;
                 } else {
                     break;
                 }

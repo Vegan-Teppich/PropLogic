@@ -7,8 +7,8 @@ public class CompoundProposition extends Proposition {
     public static final int propCount = 2;
     private AtomicProposition[] prop = new AtomicProposition[propCount];
     private Operator op;
-    public CompoundProposition(AtomicProposition prop1, Operator op, AtomicProposition prop2, Mode mode){
-        super(prop1.getPropString() + op.getSyntax() + prop2.getPropString(), mode);
+    public CompoundProposition(AtomicProposition prop1, Operator op, AtomicProposition prop2, Mode mode, int propIndex){
+        super(prop1.getPropString() + op.getSyntax() + prop2.getPropString(), mode, propIndex);
         this.prop[0] = prop1;
         this.op = op;
         this.prop[1] = prop2;

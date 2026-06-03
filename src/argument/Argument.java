@@ -14,10 +14,10 @@ public class Argument {
     public Argument(String[] premises, String[] conclusions) {
         props = new Proposition[premises.length + conclusions.length];
         for (int i = 0; i < premises.length; i++) {
-            props[i] = new Proposition(premises[i], Proposition.Mode.PREMISE);
+            props[i] = new Proposition(premises[i], Proposition.Mode.PREMISE, i);
         }
         for (int i = 0; i < conclusions.length; i++) {
-            props[premises.length + i] = new Proposition(conclusions[i], Proposition.Mode.CONCLUSION);
+            props[premises.length + i] = new Proposition(conclusions[i], Proposition.Mode.CONCLUSION, i);
         }
         this.atomicProps = extractAtomicProps();
 
@@ -201,7 +201,7 @@ public class Argument {
                     }
 
                     if (!currentProp.isEmpty()) {
-                        atomicProps.add(new AtomicProposition(currentProp, prop.getMode()));
+                        atomicProps.add(new AtomicProposition(currentProp));
                     }
 
                 }

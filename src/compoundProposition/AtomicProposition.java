@@ -6,16 +6,13 @@ import java.util.Objects;
 
 public class AtomicProposition {
     protected boolean truth;
-    protected Proposition.Mode mode;
     protected String propString;
 
-    public AtomicProposition(String propString, Mode mode){
+    public AtomicProposition(String propString){
         this.propString = propString;
-        this.mode = mode;
     }
-    public AtomicProposition(String propString, Mode mode, boolean truth){
+    public AtomicProposition(String propString, boolean truth){
         this.propString = propString;
-        this.mode = mode;
         this.truth = truth;
     }
 
@@ -57,12 +54,5 @@ public class AtomicProposition {
         this.propString = propString;
     }
 
-    public Proposition.Mode getMode() {
-        return mode;
-    }
-
-    public void setMode(Proposition.Mode mode) {
-        this.mode = mode;
-    }
 
 }
