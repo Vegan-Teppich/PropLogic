@@ -105,15 +105,12 @@ public class Proposition extends AtomicProposition {
             // output
             //output.add(propString.substring(openingParenthesisIndex, closingParenthesisIndex+1));
 
-            // wichtig: nachprüfen ob eine spätere negation auf eine jetzige überspringt
             boolean negationExists = false;
-            while (openingParenthesisIndex > 0) {
+            if (openingParenthesisIndex > 0) {
                 if (propString.charAt(openingParenthesisIndex - 1) == Operator.NEGATION.getSyntax()) {
-                    openingParenthesisIndex--;
                     negationExists = true;
-                    continue;
+                    openingParenthesisIndex--;
                 }
-                break;
             }
             String subPropString = propString.substring(openingParenthesisIndex, closingParenthesisIndex + 1);
             //if (negationExists)

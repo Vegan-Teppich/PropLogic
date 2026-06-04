@@ -361,15 +361,19 @@ public class TruthTable {
     }
 
     public void print() {
+        String trueString = "T";
+        String falseString = "F";
+        //String trueString = true + "";
+        //String falseString = false + "";
 
-        int minStringLength = (false + "").length();
+        int minStringLength = falseString.length();
         String separator = " | ";
 
         printPropLettersAndIndicesRow(separator, minStringLength);
 
         printTablePropStringsRow(separator, minStringLength);
 
-        printTruthTable(separator, minStringLength);
+        printTruthTable(separator, trueString, falseString, minStringLength);
 
     }
 
@@ -426,7 +430,7 @@ public class TruthTable {
             System.out.print(" ");
     }
 
-    private void printTruthTable(String separator, int minStringLength) {
+    private void printTruthTable(String separator, String trueString, String falseString, int minStringLength) {
         int xLength = atomicPropTable.length + subPropTable.get(0).size();
         int yLength = rowYCount;
 
@@ -440,18 +444,17 @@ public class TruthTable {
                 } else {
                     tableMode = TableMode.SUB;
                 }
-                printPropTruth(tableMode, new int[]{x, y}, minStringLength, separator);
+                printPropTruth(tableMode, new int[]{x, y}, trueString, falseString,  minStringLength, separator);
 
             }
             System.out.println();
         }
     }
 
-    private void printPropTruth(TableMode tableMode, int[] pos2d, int minStringLength, String separator) {
+    private void printPropTruth(TableMode tableMode, int[] pos2d,  String trueString, String falseString, int minStringLength, String separator) {
         int posX = pos2d[0];
         int posY = pos2d[1];
-        String tablePosPrintTrue = true + " ";
-        String tablePosPrintFalse = false + "";
+
 
         AtomicProposition prop = null;
         if (tableMode == TableMode.ATOMIC) {
@@ -461,9 +464,9 @@ public class TruthTable {
         }
 
         if (prop.isTruth()) {
-            System.out.print(tablePosPrintTrue);
+            System.out.print(trueString);
         } else {
-            System.out.print(tablePosPrintFalse);
+            System.out.print(falseString);
         }
         for (int i = 0; i < prop.getPropString().length() - minStringLength; i++)
             System.out.print(" ");
