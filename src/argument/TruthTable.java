@@ -103,7 +103,7 @@ public class TruthTable {
                         if (subPropString.charAt(atomicsData[a].getAtomicBeginIndex() - 1) == Operator.NEGATION.getSyntax())
                             atomicNegation = true;
                     atomicString = subPropString.substring(atomicsData[a].getAtomicBeginIndex(), atomicsData[a].getAtomicEndIndex());
-                    atomics[a] = new SubProposition(atomicString, mode, atomicNegation, subProp.getPropIndex());
+                    atomics[a] = new SubProposition(atomicString, mode, atomicNegation, subProp.getPropIndex(), false);
 
                 }
             }
@@ -375,7 +375,8 @@ public class TruthTable {
 
     private void printPropLettersAndIndicesRow(String separator, int minStringLength) {
         int propCount = atomicPropTable.length + subPropTable.get(0).size();
-        int propIndex = -1;
+        int prevPropIndex = -1;
+        AtomicProposition.Mode prevMode = null;
 
         System.out.print(separator);
         for (int x = 0; x < propCount; x++){
@@ -386,19 +387,20 @@ public class TruthTable {
                     printNoSeparatorLength(separator);
             }else {
                 String buildString = "";
-                int subPropX = x-atomicPropTable.length;
-                AtomicProposition.Mode mode = subPropTable.get(0).get(subPropX).getMode();
-                int newPropIndex = subPropTable.get(0).get(subPropX).getPropIndex();
-                String subPropString = subPropTable.get(0).get(subPropX).getPropString();
-                if (newPropIndex != propIndex){
-                    propIndex = newPropIndex;
+                int subPropXIndex = x-atomicPropTable.length;
+                AtomicProposition.Mode currentMode = subPropTable.get(0).get(subPropXIndex).getMode();
+                int currentPropIndex = subPropTable.get(0).get(subPropXIndex).getPropIndex();
+                String subPropString = subPropTable.get(0).get(subPropXIndex).getPropString();
+                if (currentPropIndex != prevPropIndex || currentMode != prevMode){
+                    prevPropIndex = currentPropIndex;
+                    prevMode = currentMode;
 
-                    if (mode == AtomicProposition.Mode.PREMISE){
+                    if (currentMode == AtomicProposition.Mode.PREMISE){
                         buildString += "P";
-                    } else if (mode == AtomicProposition.Mode.CONCLUSION) {
+                    } else if (currentMode == AtomicProposition.Mode.CONCLUSION) {
                         buildString += "C";
                     }
-                    buildString += propIndex+1 + ")";
+                    buildString += prevPropIndex+1 + ")";
                     System.out.print(separator);
                     System.out.print(buildString);
 
@@ -508,12 +510,16 @@ public class TruthTable {
             for (int xC = conclusionBeginXIndex; xC < subPropTable.get(y).size(); xC++) {
                 if (subPropTable.get(y).get(xC).getMode() != AtomicProposition.Mode.CONCLUSION)
                     throw new IllegalStateException("CHECK WHY INDICES ARE NO CONCLUSION");
+                if (!subPropTable.get(y).get(xC).isFullProp())
+                    continue;
 
                 if (!subPropTable.get(y).get(xC).isTruth()) {
 
                     for (int xP = 0; xP < conclusionBeginXIndex; xP++) {
                         if (subPropTable.get(y).get(xP).getMode() != AtomicProposition.Mode.PREMISE)
                             throw new IllegalStateException("CHECK WHY INDICES ARE NO PREMISE");
+                        if (!subPropTable.get(y).get(xP).isFullProp())
+                            continue;
 
                         if (!subPropTable.get(y).get(xP).isTruth())
                             break;

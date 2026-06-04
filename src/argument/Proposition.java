@@ -13,8 +13,6 @@ public class Proposition extends AtomicProposition {
     private int[] parenthesesCount;
     protected Mode mode;
     protected int propIndex;
-    protected int subPropIndexOfCompleteProp;
-
 
     //private int[] index = new int[2];
     public Proposition(String propString, Mode mode, int propIndex) {
@@ -77,8 +75,9 @@ public class Proposition extends AtomicProposition {
         int closingParenthesisIndex = -1;
         ArrayList<Integer> usedOpeningParenthesesIndices = new ArrayList<>();
 
-        closingParenthesisIndex--;
+        closingParenthesisIndex--; // wichtig
         for (int i = 0; i < parenthesesCount[1]; i++) {
+            boolean subPropIsFullProp = false;
 
             // handle closingParentheses
             if ((closingParenthesisIndex = propString.indexOf(Operator.CLOSING_PARENTHESIS.getSyntax(), closingParenthesisIndex + 1)) != -1)
@@ -105,6 +104,8 @@ public class Proposition extends AtomicProposition {
 
             // output
             //output.add(propString.substring(openingParenthesisIndex, closingParenthesisIndex+1));
+
+            // wichtig: nachprüfen ob eine spätere negation auf eine jetzige überspringt
             boolean negationExists = false;
             while (openingParenthesisIndex > 0) {
                 if (propString.charAt(openingParenthesisIndex - 1) == Operator.NEGATION.getSyntax()) {
@@ -116,9 +117,10 @@ public class Proposition extends AtomicProposition {
             }
             String subPropString = propString.substring(openingParenthesisIndex, closingParenthesisIndex + 1);
             //if (negationExists)
-            output.add(new SubProposition(subPropString, mode, negationExists, propIndex));
             if (i == parenthesesCount[1]-1)
-                subPropIndexOfCompleteProp = i;
+                subPropIsFullProp = true;
+            output.add(new SubProposition(subPropString, mode, negationExists, propIndex, subPropIsFullProp));
+
         }
         return output;
     }
@@ -169,14 +171,6 @@ public class Proposition extends AtomicProposition {
 
     public List<SubProposition> getSubProps() {
         return subProps;
-    }
-
-    public int getSubPropIndexOfCompleteProp() {
-        return subPropIndexOfCompleteProp;
-    }
-
-    public void setSubPropIndexOfCompleteProp(int subPropIndexOfCompleteProp) {
-        this.subPropIndexOfCompleteProp = subPropIndexOfCompleteProp;
     }
 
     public Mode getMode() {
