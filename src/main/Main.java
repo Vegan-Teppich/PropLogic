@@ -57,10 +57,11 @@ public class Main {
 
             for (int p = 0; p < numberOfPremises + numberOfConclusions; p++) {
                 System.out.print("Tell me the ");
-                System.out.print((p + 1) + ".");
                 if (p < numberOfPremises) {
+                    System.out.print((p + 1) + ".");
                     System.out.println(" premise");
                 } else {
+                    System.out.print((p-numberOfPremises) + 1 + ".");
                     System.out.println(" conclusion");
                 }
                 String input = scanner.nextLine();
