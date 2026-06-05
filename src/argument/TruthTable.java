@@ -6,6 +6,14 @@ import compoundProposition.AtomicProposition;
 
 import java.util.*;
 
+/**
+ * This class generates and manages a truth table for a logical argument.
+ * It enumerates all possible truth value assignments for atomic propositions and computes truth values for sub-propositions and conclusions.
+ * The truth table is used to determine whether an argument is valid (all premises true implies all conclusions true).
+ * @author: TeppichKnecht
+ * @version: 1.0.1
+ * @since: 2024-06
+ */
 public class TruthTable {
 
     Argument arg;
@@ -40,7 +48,7 @@ public class TruthTable {
                 SubProposition subProp = subProps.get(x);
                 String subPropString = subProp.getPropString();
 
-                SubPropAtomicIndices[] atomicsData = new SubPropAtomicIndices[CompoundProposition.propCount];
+                SubPropAtomicIndices[] atomicsData = new SubPropAtomicIndices[CompoundProposition.OPERAND_COUNT];
                 SubProposition[] atomics;
                 Operator op;
 
