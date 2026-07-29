@@ -17,8 +17,8 @@ public class Main {
 
         arg = input();
 
-        if (!arg.cleanAndCheckIfArgumentIsWellFormedFormula())
-            throw new IllegalArgumentException("ARGUMENT IS NOT A WELL-FORMED-FORMULA (WFF)");
+        //if (!arg.cleanAndCheckIfArgumentIsWellFormedFormula())
+        //    throw new IllegalArgumentException("ARGUMENT IS NOT A WELL-FORMED-FORMULA (WFF)");
 
         arg.removeDoubleNegations();
 
@@ -58,11 +58,11 @@ public class Main {
             for (int p = 0; p < numberOfPremises + numberOfConclusions; p++) {
                 System.out.print("Tell me the ");
                 if (p < numberOfPremises) {
-                    System.out.print((p + 1) + ".");
-                    System.out.println(" premise");
+                    System.out.print(p + 1);
+                    System.out.println(". premise");
                 } else {
-                    System.out.print((p-numberOfPremises) + 1 + ".");
-                    System.out.println(" conclusion");
+                    System.out.print(p-numberOfPremises + 1);
+                    System.out.println(". conclusion");
                 }
                 String input = scanner.nextLine();
                 if (input.trim().equalsIgnoreCase(cancelPhrase)) {

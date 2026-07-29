@@ -10,9 +10,11 @@ import java.util.Objects;
 public class Proposition extends AtomicProposition {
     private List<SubProposition> subProps;
 
-    private int[] parenthesesCount;
     protected Mode mode;
     protected int propIndex;
+    int[] customParenthesesCount;
+
+    boolean wellFormedFormula = true;
 
     //private int[] index = new int[2];
     public Proposition(String propString, Mode mode, int propIndex) {
@@ -22,39 +24,52 @@ public class Proposition extends AtomicProposition {
         init();
     }
 
-    private void init(){
-        //if (propString.isEmpty())
-        //    return;
+    private void init() {
+        this.wellFormedFormula = isWffPreCheck();
         this.propString = cleanPropString();
-        this.parenthesesCount = countParentheses();
-        this.subProps = extractSubProps();
+        this.wellFormedFormula = checkIfWffAndExtractSubProps();
+
+        this.propString = removeAllDoubleNegations();
+
     }
 
+    private boolean isWffPreCheck() {
+        if (propString.isEmpty())
+            return false;
+        if (!isCustomParenthesesCountEqual())
+            return false;
+        return wellFormedFormula;
+    }
+
+    private boolean isCustomParenthesesCountEqual(){
+        customParenthesesCount = countCustomParentheses();
+        return customParenthesesCount[0] == customParenthesesCount[1];
+    }
 
 
     public String cleanPropString() {
 
         String propString = this.propString.replace(" ", "");
 
+        propString = removeUnusableDoubleNegations(propString);
 
-        if (propString.isEmpty()){
-            propString = Operator.OPENING_PARENTHESIS.getSyntax() + propString + Operator.CLOSING_PARENTHESIS.getSyntax();
-            return propString;
-        }else {
-            if (propString.charAt(0) != Operator.OPENING_PARENTHESIS.getSyntax() || propString.charAt(propString.length() - 1) != Operator.CLOSING_PARENTHESIS.getSyntax())
-                if (!(propString.charAt(0) == Operator.NEGATION.getSyntax() && propString.charAt(propString.length() - 1) != Operator.CLOSING_PARENTHESIS.getSyntax()))
-                    propString = Operator.OPENING_PARENTHESIS.getSyntax() + propString + Operator.CLOSING_PARENTHESIS.getSyntax();
-        }
+        return propString;
+    }
 
-        // remove unnecessary double negations
+
+
+    public String removeUnusableDoubleNegations(String propString) {
+
         int searchIndex = 0;
         while ((searchIndex = propString.indexOf(Operator.NEGATION.getSyntax() + "" + Operator.NEGATION.getSyntax() + "" + Operator.NEGATION.getSyntax(), searchIndex)) != -1) {
             propString = propString.substring(0, searchIndex) + propString.substring(searchIndex + 2);
         }
         return propString;
+
     }
 
-    public int[] countParentheses() {
+
+    public int[] countCustomParentheses() {
         int openingParenthesesNumber = 0;
         int closingParenthesesNumber = 0;
 
@@ -68,63 +83,182 @@ public class Proposition extends AtomicProposition {
         return new int[]{openingParenthesesNumber, closingParenthesesNumber};
     }
 
-    public ArrayList<SubProposition> extractSubProps() {
-        ArrayList<SubProposition> output = new ArrayList<>();
+    public void extractSubPropsAndAddParentheses() {
+        propString = Operator.OPENING_PARENTHESIS.getSyntax() + propString + Operator.CLOSING_PARENTHESIS.getSyntax();
 
         int openingParenthesisIndex = -1;
         int closingParenthesisIndex = -1;
         ArrayList<Integer> usedOpeningParenthesesIndices = new ArrayList<>();
 
-        closingParenthesisIndex--; // wichtig
-        for (int i = 0; i < parenthesesCount[1]; i++) {
-            boolean subPropIsFullProp = false;
+        closingParenthesisIndex--; // wichtig damit beim + rechnen -1 für den ersten check rauskommt
+        for (int i = 0; i < customParenthesesCount[1]; i++) {
 
-            // handle closingParentheses
+            // setze openingParenthesisIndex zum neuen index zurück
             if ((closingParenthesisIndex = propString.indexOf(Operator.CLOSING_PARENTHESIS.getSyntax(), closingParenthesisIndex + 1)) != -1)
                 openingParenthesisIndex = closingParenthesisIndex;
 
-            // handle openingParentheses und speicher benutzte
-            for (int j = closingParenthesisIndex; j >= 0; j--) {
-                if (propString.charAt(j) == Operator.OPENING_PARENTHESIS.getSyntax()) {
-                    boolean parenthesisWasUsed = false;
-                    for (int usedOpeningParenthesisIndex : usedOpeningParenthesesIndices) {
-                        if (j == usedOpeningParenthesisIndex) {
-                            parenthesisWasUsed = true;
-                            break;
-                        }
-
-                    }
-                    if (!parenthesisWasUsed) {
-                        openingParenthesisIndex = j;
-                        usedOpeningParenthesesIndices.add(j);
-                        break;
-                    }
-                }
-            }
+            openingParenthesisIndex = searchNextOpeningParenthesis(closingParenthesisIndex, usedOpeningParenthesesIndices);
+            if (openingParenthesisIndex > -1)
+                usedOpeningParenthesesIndices.add(openingParenthesisIndex);
 
             // output
             //output.add(propString.substring(openingParenthesisIndex, closingParenthesisIndex+1));
 
-            boolean negationExists = false;
-            if (openingParenthesisIndex > 0) {
-                if (propString.charAt(openingParenthesisIndex - 1) == Operator.NEGATION.getSyntax()) {
-                    negationExists = true;
-                    openingParenthesisIndex--;
-                }
-            }
+            boolean negationExists = isSubPropNegated(openingParenthesisIndex);
+            if (negationExists)
+                // offset für die negation
+                openingParenthesisIndex--;
+
             String subPropString = propString.substring(openingParenthesisIndex, closingParenthesisIndex + 1);
-            //if (negationExists)
-            if (i == parenthesesCount[1]-1)
-                subPropIsFullProp = true;
-            output.add(new SubProposition(subPropString, mode, negationExists, propIndex, subPropIsFullProp));
+
+            subProps.add(new SubProposition(subPropString, mode, negationExists, propIndex, isSubPropFullProp(i)));
 
         }
-        return output;
+    }
+
+    private boolean isSubPropFullProp(int currentParenthesisCount) {
+        return currentParenthesisCount == customParenthesesCount[1] - 1;
+    }
+
+    private boolean isSubPropNegated(int openingParenthesisIndex) {
+        if (openingParenthesisIndex >= 1) {
+            if (openingParenthesisIndex >= 2) {
+                if (propString.substring(openingParenthesisIndex - 1, openingParenthesisIndex).equals(Operator.NEGATION.getSyntax() + "" + Operator.NEGATION.getSyntax())) {
+                    return false;
+                }
+            }
+            if (propString.charAt(openingParenthesisIndex - 1) == Operator.NEGATION.getSyntax()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int searchNextOpeningParenthesis(int closingParenthesisIndex, List<Integer> usedOpeningParenthesesIndices) {
+        int foundOpeningParenthesisIndex;
+        while ((foundOpeningParenthesisIndex = propString.substring(0, closingParenthesisIndex).lastIndexOf(Operator.OPENING_PARENTHESIS.getSyntax())) != -1) {
+            boolean parenthesisWasUsed = false;
+            for (int usedOpeningParenthesisIndex : usedOpeningParenthesesIndices) {
+                if (foundOpeningParenthesisIndex == usedOpeningParenthesisIndex) {
+                    parenthesisWasUsed = true;
+                    break;
+                }
+            }
+            if (!parenthesisWasUsed) {
+                return foundOpeningParenthesisIndex;
+            }
+
+        }
+        return foundOpeningParenthesisIndex;
+    }
+
+    public boolean checkIfWffAndExtractSubProps() {
+
+        extractSubPropsAndAddParentheses();
+
+        if (!checkIfSubPropsAreWellFormedFormula())
+            return false;
+        return true;
+
     }
 
 
+    private boolean checkIfSubPropsAreWellFormedFormula() {
 
-    public String removeDoubleNegations() {
+        for (int p = 0; p < subProps.size(); p++) {
+
+            String propString = subProps.get(p).getPropString();
+            //System.out.println(propString);
+            String lastCompound1 = "";
+            String lastCompound2 = "";
+            char replaceProp = ' ';
+
+
+            if (p >= 1) {
+                lastCompound1 = subProps.get(p - 1).getPropString();
+                if (p >= 2) {
+                    lastCompound2 = subProps.get(p - 2).getPropString();
+                }
+            }
+
+
+            if (!lastCompound1.isEmpty())
+                propString = propString.replace(lastCompound1, replaceProp + "");
+            if (!lastCompound2.isEmpty())
+                propString = propString.replace(lastCompound2, replaceProp + "");
+
+
+            int opCount = 0;
+            int opIndex = -1;
+            for (Operator op : Operator.values()) {
+                if (op == Operator.OPENING_PARENTHESIS || op == Operator.CLOSING_PARENTHESIS)
+                    continue;
+
+                if (propString.charAt(propString.length() - 2) == op.getSyntax())
+                    return false;
+
+                if (op == Operator.NEGATION)
+                    continue;
+
+                if (propString.charAt(1) == op.getSyntax() || propString.charAt(propString.length() - 1) == op.getSyntax() || propString.charAt(0) == op.getSyntax())
+                    return false;
+
+                if (propString.contains(op.getSyntax() + "")) {
+
+                    int index = -1;
+                    while ((index = propString.indexOf(op.getSyntax(), index + 1)) != -1) {
+                        opCount++;
+                        if (opCount > 1)
+                            return false;
+                    }
+
+                    if (propString.indexOf(op.getSyntax()) != -1) {
+                        opIndex = propString.indexOf(op.getSyntax());
+                    }
+
+                }
+            }
+
+            if (opIndex != -1) {
+                if (propString.charAt(opIndex - 1) == Operator.OPENING_PARENTHESIS.getSyntax() || propString.charAt(opIndex + 1) == Operator.CLOSING_PARENTHESIS.getSyntax())
+                    return false;
+
+                if (propString.charAt(opIndex - 1) == Operator.NEGATION.getSyntax())
+                    return false;
+            }
+
+
+            if (propString.contains(replaceProp + "") && propString.length() > 3) {
+
+
+                if (propString.contains(replaceProp + "" + replaceProp))
+                    return false;
+
+                int index = -1;
+                int count = 0;
+                while ((index = propString.indexOf(replaceProp, index + 1)) != -1) {
+                    count++;
+                    if (count > 2)
+                        return false;
+                }
+
+
+                if (opIndex - 1 == propString.indexOf(replaceProp))
+                    if (propString.charAt(propString.indexOf(replaceProp) - 1) != Operator.OPENING_PARENTHESIS.getSyntax())
+                        return false;
+
+                if (opIndex + 1 == propString.lastIndexOf(replaceProp))
+                    if (propString.lastIndexOf(replaceProp) + 1 != propString.length() - 1)
+                        return false;
+
+            }
+        }
+
+        return true;
+    }
+
+
+    public String removeAllDoubleNegations() {
         String propString = this.getPropString();
 
         char negation = Operator.NEGATION.getSyntax();
@@ -135,7 +269,7 @@ public class Proposition extends AtomicProposition {
     }
 
     @Override
-    public int hashCode(){
+    public int hashCode() {
         return Objects.hash(propString, mode);
     }
 
@@ -144,9 +278,9 @@ public class Proposition extends AtomicProposition {
         if (this == obj)
             return true;
 
-        if (obj.getClass() == this.getClass()){
-              if (((Proposition) obj).propString.equals(this.propString) && ((Proposition) obj).mode == this.mode)
-                  return true;
+        if (obj.getClass() == this.getClass()) {
+            if (((Proposition) obj).propString.equals(this.propString) && ((Proposition) obj).mode == this.mode)
+                return true;
         }
         return false;
     }
@@ -163,7 +297,7 @@ public class Proposition extends AtomicProposition {
 
     public int[] getParenthesesCount() {
         // 0 = open | 1 = close
-        return parenthesesCount;
+        return customParenthesesCount;
     }
 
     public List<SubProposition> getSubProps() {

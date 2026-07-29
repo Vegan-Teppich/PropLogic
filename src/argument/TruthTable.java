@@ -504,7 +504,6 @@ public class TruthTable {
     public boolean isArgumentValid() {
         setConclusionBeginIndex();
 
-        // TODO: soll nach props suchen und nicht nach subProps
         return searchInvalidRow();
     }
 
