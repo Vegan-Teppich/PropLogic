@@ -20,15 +20,15 @@ public class Main {
         //if (!arg.cleanAndCheckIfArgumentIsWellFormedFormula())
         //    throw new IllegalArgumentException("ARGUMENT IS NOT A WELL-FORMED-FORMULA (WFF)");
 
-        arg.removeDoubleNegations();
+        //arg.removeDoubleNegations();
 
-        TruthTable tt = new TruthTable(arg);
+        //TruthTable tt = new TruthTable(arg);
 
-        tt.print();
+        //tt.print();
 
-        System.out.println();
+        //System.out.println();
 
-        printValid(tt.isArgumentValid());
+        //printValid(tt.isArgumentValid());
 
     }
 

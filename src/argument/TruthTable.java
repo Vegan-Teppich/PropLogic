@@ -89,8 +89,8 @@ public class TruthTable {
 
         if (atomicsData[0].getAtomicBeginIndex() > -1) {
 
-            if (subPropString.charAt(0) == Operator.NEGATION.getSyntax())
-                subProp.setNegation(true);
+            //if (subPropString.charAt(0) == Operator.NEGATION.getSyntax())
+                //subProp.setNegation(true);
 
             // atomicsData.length ist immer 2
             for (int a = 0; a < atomicsData.length; a++) {
@@ -103,7 +103,7 @@ public class TruthTable {
                         if (subPropString.charAt(atomicsData[a].getAtomicBeginIndex() - 1) == Operator.NEGATION.getSyntax())
                             atomicNegation = true;
                     atomicString = subPropString.substring(atomicsData[a].getAtomicBeginIndex(), atomicsData[a].getAtomicEndIndex());
-                    atomics[a] = new SubProposition(atomicString, mode, atomicNegation, subProp.getPropIndex(), false);
+                    atomics[a] = new SubProposition(atomicString, atomicNegation, mode, subProp.getPropIndex(), false, false, false);
 
                 }
             }
@@ -159,23 +159,23 @@ public class TruthTable {
     }
 
     private void searchAndSaveAtomicData(String subPropString, SubPropAtomicIndices[] atomicsData, TableMode tableMode, int tableXIndex) {
-        String previousSubProp = null;
+        String preSubProp = null;
         if (tableMode == TableMode.SUB) {
-            previousSubProp = subPropTable.get(0).get(tableXIndex).getPropString();
+            preSubProp = subPropTable.get(0).get(tableXIndex).getPropString();
         } else if (tableMode == TableMode.ATOMIC) {
-            previousSubProp = atomicPropTable[tableXIndex][0].getPropString();
+            preSubProp = atomicPropTable[tableXIndex][0].getPropString();
         }
         // atomicsData.length ist immer 2
         for (int a = 0; a < atomicsData.length; a++) {
             if (atomicsData[a].getAtomicBeginIndex() <= -1) {
                 if (a == 0) {
-                    atomicsData[a].setAtomicBeginIndex(subPropString.indexOf(previousSubProp));
+                    atomicsData[a].setAtomicBeginIndex(subPropString.indexOf(preSubProp));
                 } else if (a == 1) {
-                    atomicsData[a].setAtomicBeginIndex(subPropString.lastIndexOf(previousSubProp));
+                    atomicsData[a].setAtomicBeginIndex(subPropString.lastIndexOf(preSubProp));
                 }
 
                 if (atomicsData[a].getAtomicBeginIndex() > -1) {
-                    atomicsData[a].setAtomicLength(previousSubProp.length());
+                    atomicsData[a].setAtomicLength(preSubProp.length());
                     atomicsData[a].setTableMode(tableMode);
                     atomicsData[a].setTableXIndex(tableXIndex);
 

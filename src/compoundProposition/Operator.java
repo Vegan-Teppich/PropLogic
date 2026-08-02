@@ -20,7 +20,9 @@ public enum Operator {
     public char getSyntax(){
         return syntax;
     }
-    public int getPriority() {return priority;}
+    public int getPriority() {
+        return priority;
+    }
     public static Operator[] getUnary(){
         return new Operator[]{NEGATION};
     }

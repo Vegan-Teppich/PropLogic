@@ -74,7 +74,7 @@ public class Argument {
                     }
 
                     if (!currentProp.isEmpty()) {
-                        atomicProps.add(new AtomicProposition(currentProp));
+                        atomicProps.add(new AtomicProposition(currentProp, false, null, -1));
                     }
 
                 }

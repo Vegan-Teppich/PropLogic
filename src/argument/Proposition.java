@@ -3,31 +3,31 @@ package argument;
 import compoundProposition.AtomicProposition;
 import compoundProposition.Operator;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class Proposition extends AtomicProposition {
     private List<SubProposition> subProps;
 
-    protected Mode mode;
-    protected int propIndex;
     int[] customParenthesesCount;
 
     boolean wellFormedFormula = true;
 
     //private int[] index = new int[2];
     public Proposition(String propString, Mode mode, int propIndex) {
-        super(propString);
-        this.mode = mode;
-        this.propIndex = propIndex;
+        super(propString, false, mode, propIndex);
         init();
     }
 
     private void init() {
         this.wellFormedFormula = isWffPreCheck();
+        if (!wellFormedFormula)
+            return;
         this.propString = cleanPropString();
-        this.wellFormedFormula = checkIfWffAndExtractSubProps();
+
+        extractSubPropsOutOfProp();
+
+        checkIfSubPropsAreWellFormedFormula();
+
 
         this.propString = removeAllDoubleNegations();
 
@@ -83,19 +83,21 @@ public class Proposition extends AtomicProposition {
         return new int[]{openingParenthesesNumber, closingParenthesesNumber};
     }
 
-    public void extractSubPropsAndAddParentheses() {
+    public ArrayList<SubProposition> extractSubPropsOutOfProp() {
         propString = Operator.OPENING_PARENTHESIS.getSyntax() + propString + Operator.CLOSING_PARENTHESIS.getSyntax();
+
+        ArrayList<SubProposition> subProps = new ArrayList<>();
 
         int openingParenthesisIndex = -1;
         int closingParenthesisIndex = -1;
-        ArrayList<Integer> usedOpeningParenthesesIndices = new ArrayList<>();
+        Set<Integer> usedOpeningParenthesesIndices = new HashSet<>();
 
         closingParenthesisIndex--; // wichtig damit beim + rechnen -1 für den ersten check rauskommt
-        for (int i = 0; i < customParenthesesCount[1]; i++) {
+        for (int sp = 0; sp < customParenthesesCount[1]; sp++) {
+            SubProposition subProp;
 
             // setze openingParenthesisIndex zum neuen index zurück
-            if ((closingParenthesisIndex = propString.indexOf(Operator.CLOSING_PARENTHESIS.getSyntax(), closingParenthesisIndex + 1)) != -1)
-                openingParenthesisIndex = closingParenthesisIndex;
+            closingParenthesisIndex = propString.indexOf(Operator.CLOSING_PARENTHESIS.getSyntax(), closingParenthesisIndex + 1);
 
             openingParenthesisIndex = searchNextOpeningParenthesis(closingParenthesisIndex, usedOpeningParenthesesIndices);
             if (openingParenthesisIndex > -1)
@@ -104,16 +106,29 @@ public class Proposition extends AtomicProposition {
             // output
             //output.add(propString.substring(openingParenthesisIndex, closingParenthesisIndex+1));
 
-            boolean negationExists = isSubPropNegated(openingParenthesisIndex);
-            if (negationExists)
+            boolean negation = isSubPropNegated(openingParenthesisIndex);
+            if (negation)
                 // offset für die negation
                 openingParenthesisIndex--;
 
             String subPropString = propString.substring(openingParenthesisIndex, closingParenthesisIndex + 1);
 
-            subProps.add(new SubProposition(subPropString, mode, negationExists, propIndex, isSubPropFullProp(i)));
+            subProp = new SubProposition(subPropString, negation, mode, propIndex, isSubPropFullProp(sp), true);
+            subProps.addAll(extractPrecedenceOfLogicalOperatorsSubPropsOutOfSubProp(subProp));
+            subProps.add(subProp);
 
         }
+
+        return subProps;
+    }
+
+    public ArrayList<SubProposition> extractPrecedenceOfLogicalOperatorsSubPropsOutOfSubProp(SubProposition subProp){
+        ArrayList<Operator> scanOps = new ArrayList<>(Arrays.asList(Operator.values()));
+        scanOps.removeAll(Arrays.asList(Operator.getParentheses()));
+        scanOps.removeAll(Arrays.asList(Operator.getUnary()));
+
+        System.out.println(scanOps);
+        return null;
     }
 
     private boolean isSubPropFullProp(int currentParenthesisCount) {
@@ -134,7 +149,7 @@ public class Proposition extends AtomicProposition {
         return false;
     }
 
-    private int searchNextOpeningParenthesis(int closingParenthesisIndex, List<Integer> usedOpeningParenthesesIndices) {
+    private int searchNextOpeningParenthesis(int closingParenthesisIndex, Set<Integer> usedOpeningParenthesesIndices) {
         int foundOpeningParenthesisIndex;
         while ((foundOpeningParenthesisIndex = propString.substring(0, closingParenthesisIndex).lastIndexOf(Operator.OPENING_PARENTHESIS.getSyntax())) != -1) {
             boolean parenthesisWasUsed = false;
@@ -152,15 +167,7 @@ public class Proposition extends AtomicProposition {
         return foundOpeningParenthesisIndex;
     }
 
-    public boolean checkIfWffAndExtractSubProps() {
 
-        extractSubPropsAndAddParentheses();
-
-        if (!checkIfSubPropsAreWellFormedFormula())
-            return false;
-        return true;
-
-    }
 
 
     private boolean checkIfSubPropsAreWellFormedFormula() {
@@ -172,7 +179,6 @@ public class Proposition extends AtomicProposition {
             String lastCompound1 = "";
             String lastCompound2 = "";
             char replaceProp = ' ';
-
 
             if (p >= 1) {
                 lastCompound1 = subProps.get(p - 1).getPropString();

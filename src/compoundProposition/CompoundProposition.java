@@ -1,17 +1,15 @@
 package compoundProposition;
 
-import argument.Proposition;
-
-public class CompoundProposition extends Proposition {
+public class CompoundProposition extends AtomicProposition {
     public static final int opCount = 1;
     public static final int propCount = 2;
-    private AtomicProposition[] prop = new AtomicProposition[propCount];
+    private AtomicProposition[] atomics = new AtomicProposition[propCount];
     private Operator op;
-    public CompoundProposition(AtomicProposition prop1, Operator op, AtomicProposition prop2, Mode mode, int propIndex){
-        super(prop1.getPropString() + op.getSyntax() + prop2.getPropString(), mode, propIndex);
-        this.prop[0] = prop1;
+    public CompoundProposition(AtomicProposition prop1, Operator op, AtomicProposition prop2, boolean negation, Mode mode, int propIndex){
+        super(prop1.getPropString() + op.getSyntax() + prop2.getPropString(), negation, mode, propIndex);
+        this.atomics[0] = prop1;
         this.op = op;
-        this.prop[1] = prop2;
+        this.atomics[1] = prop2;
         super.setTruth(getCompoundTruthValue(prop1.isTruth(), op, prop2.isTruth()));
 
     }
@@ -52,8 +50,13 @@ public class CompoundProposition extends Proposition {
         throw otherOpEx;
     }
 
-    public AtomicProposition[] getProp() {
-        return prop;
+    @Override
+    public String getPropString(){
+        return atomics[0].getPropString() + op + atomics[1].getPropString();
+    }
+
+    public AtomicProposition[] getAtomicProps() {
+        return atomics;
     }
     public Operator getOperator() {
         return op;
